@@ -13,20 +13,19 @@ trait Archivable
     /**
      * Database connection dedicated to archiving
      */
-    protected string $archiveConnection;
+    protected static $archiveConnection;
 
-    
-     /**
+    /**
      * Boot the archivable model.
      *
      * @return void
      */
     protected static function boot()
     {
-        parent::boot();
-        static::creating(function ($archive) {
-            $archive->archiveConnection = Config::get('model-archive.archive_db_connection');
-        });
+        if(!self::$archiveConnection){
+            self::$archiveConnection = Config::get('model-archive.archive_db_connection');
+        }
+        parent::boot(); 
     }
 
     /**
@@ -36,7 +35,7 @@ trait Archivable
      */
     public static function bootArchivable()
     {
-        static::addGlobalScope(new ArchivableScope);
+        static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
     }
 
     /**
@@ -59,14 +58,14 @@ trait Archivable
             /** @var array<string> $archive_with */
             $archiveWith = $archive->archive_with;
 
-            $archived = DB::connection($this->archiveConnection)->table($this->getTable())->where('id', $this->id)->first();
+            $archived = DB::connection(static::$archiveConnection)->table($this->getTable())->where('id', $this->id)->first();
 
             if ($archived) {
                 foreach ($archiveWith as $with) {
                     $sourceRelationship = $this->$with;
 
                     if ($sourceRelationship) {
-                        $relationArchived = DB::connection($this->archiveConnection)
+                        $relationArchived = DB::connection(static::$archiveConnection)
                             ->table($sourceRelationship->getTable())
                             ->where('id', $sourceRelationship->id)
                             ->exists();
