@@ -13,7 +13,7 @@ trait Archivable
     /**
      * Database connection dedicated to archiving
      */
-    protected static $archiveConnection;
+    public static $archiveConnection;
 
     /**
      * Boot the archivable model.
