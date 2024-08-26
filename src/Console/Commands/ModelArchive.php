@@ -43,8 +43,8 @@ class ModelArchive extends Command
                 ->with($archive_with);
 
             foreach ($query->cursor() as $item) {
-                DB::beginTransaction();
-                DB::connection($this->archiveDbConnection)->beginTransaction();
+                DB::beginTransaction(); 
+                DB::connection($model::$archiveConnection)->beginTransaction();
 
                 try {
                     $this->archive($item, $archive_with);
@@ -79,13 +79,13 @@ class ModelArchive extends Command
 
     /**
      * Copy a model to the archive database
-     * @param Model $model 
+     * @param Model? $model
      * @param array<string> $archiveWith
      * @param bool $commit
      * @return void
      */
     
-    private function archive(Model $model, array $archiveWith = [], bool $commit = true):void
+    private function archive($model, array $archiveWith = [], bool $commit = true):void
     {
         $modelName = $model::class;
         $original = $model->getRawOriginal();
@@ -94,7 +94,7 @@ class ModelArchive extends Command
             'id' => $id,
         ];
 
-        DB::connection($this->archiveDbConnection)->table($model->getTable())->upsert($original, $uniqueBy, $original);
+        DB::connection($model::$archiveConnection)->table($model->getTable())->upsert($original, $uniqueBy, $original);
 
         if ($commit) {
             (new Archive([
