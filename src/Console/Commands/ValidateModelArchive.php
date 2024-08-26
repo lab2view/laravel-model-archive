@@ -13,7 +13,7 @@ class ValidateModelArchive extends Command
 
     public $description = 'Check if archivables models as been good archived and remove them to main database';
 
-    public function handle():int
+    public function handle(): int
     {
         $archives = Archive::select('*')->unvalidated()->get();
 

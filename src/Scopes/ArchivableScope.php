@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class ArchivableScope implements Scope
 {
-    public function __construct(protected string $archiveConnection) {
-    }
+    public function __construct(protected string $archiveConnection) {}
 
     /**
      * All of the extensions to be added to the builder.
@@ -30,7 +29,7 @@ class ArchivableScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        $builder->onlyArchived();
+        $builder->unarchived();
     }
 
     /**
@@ -85,7 +84,7 @@ class ArchivableScope implements Scope
         });
     }
 
-       /**
+    /**
      * Add the only-archived archived extension to the builder.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
@@ -93,7 +92,7 @@ class ArchivableScope implements Scope
      */
     public function addOnlyArchived(Builder $builder)
     {
-        $builder->macro('onlyArchived', function (Builder $builder) {  
+        $builder->macro('onlyArchived', function (Builder $builder) {
             $conn = DB::connection($this->archiveConnection);
 
             $query = $builder->getQuery();

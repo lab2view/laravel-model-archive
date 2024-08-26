@@ -3,9 +3,9 @@
 namespace Lab2view\ModelArchive\Models;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\MorphTo; 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Archive extends Model
 {
@@ -39,7 +39,7 @@ class Archive extends Model
         return $this->morphTo();
     }
 
-    public function scopeUnvalidated(Builder $query):Builder
+    public function scopeUnvalidated(Builder $query): Builder
     {
         return $query->whereNull('validated_at');
     }
