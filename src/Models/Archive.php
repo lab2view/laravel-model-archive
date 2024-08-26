@@ -10,16 +10,6 @@ use Illuminate\Support\Facades\Config;
 
 class Archive extends Model
 {
-    protected $connection;
-
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($archive) {
-            $archive->connection = Config::get('model-archive.main_db_connection');
-        });
-    }
-
     /**
      * The attributes that are mass assignable.
      *
