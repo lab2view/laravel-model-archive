@@ -22,10 +22,10 @@ trait Archivable
      */
     protected static function boot()
     {
-        if(!self::$archiveConnection){
+        if (! self::$archiveConnection) {
             self::$archiveConnection = Config::get('model-archive.archive_db_connection');
         }
-        parent::boot(); 
+        parent::boot();
     }
 
     /**

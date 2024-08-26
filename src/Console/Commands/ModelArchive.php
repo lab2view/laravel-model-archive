@@ -5,7 +5,6 @@ namespace Lab2view\ModelArchive\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Lab2view\ModelArchive\Models\Archive;
@@ -16,14 +15,6 @@ class ModelArchive extends Command
     protected $signature = 'lab2view:model_archive';
 
     public $description = 'Archive all archivable models in the dedicated archives database.';
-
-    protected string $archiveDbConnection;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->archiveDbConnection = Config::get('model-archive.archive_db_connection');
-    }
 
     public function handle(): int
     {
@@ -43,11 +34,13 @@ class ModelArchive extends Command
                 ->with($archive_with);
 
             foreach ($query->cursor() as $item) {
-                DB::beginTransaction(); 
-                DB::connection($model::$archiveConnection)->beginTransaction();
+                $archiveConnection = $model::$archiveConnection;
+
+                DB::beginTransaction();
+                DB::connection($archiveConnection)->beginTransaction();
 
                 try {
-                    $this->archive($item, $archive_with);
+                    $this->archive($item, $archive_with, $archiveConnection);
                     foreach ($archive_with as $relation) {
                         if (! ($item->$relation() instanceof \Illuminate\Database\Eloquent\Relations\BelongsTo)) {
                             $this->error('>> The relation '.$relation.' in '.$model.'.$archive_with is not instanceof BelongTo.');
@@ -58,15 +51,15 @@ class ModelArchive extends Command
                         $relationValue = $item->$relation;
 
                         if ($relationValue) {
-                            $this->archive($relationValue, [], false);
+                            $this->archive($relationValue, [], $archiveConnection, false);
                         }
                     }
 
                     DB::commit();
-                    DB::connection($this->archiveDbConnection)->commit();
+                    DB::connection($archiveConnection)->commit();
                 } catch (\Throwable $th) {
                     DB::rollBack();
-                    DB::connection($this->archiveDbConnection)->rollBack();
+                    DB::connection($archiveConnection)->rollBack();
                 }
             }
             $this->comment('>> Archive of model '.$model.' done.');
@@ -79,13 +72,10 @@ class ModelArchive extends Command
 
     /**
      * Copy a model to the archive database
-     * @param Model? $model
-     * @param array<string> $archiveWith
-     * @param bool $commit
-     * @return void
+     *
+     * @param  array<string>  $archiveWith
      */
-    
-    private function archive($model, array $archiveWith = [], bool $commit = true):void
+    private function archive(Model $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
     {
         $modelName = $model::class;
         $original = $model->getRawOriginal();
@@ -94,7 +84,7 @@ class ModelArchive extends Command
             'id' => $id,
         ];
 
-        DB::connection($model::$archiveConnection)->table($model->getTable())->upsert($original, $uniqueBy, $original);
+        DB::connection($archiveConnection)->table($model->getTable())->upsert($original, $uniqueBy, $original);
 
         if ($commit) {
             (new Archive([
@@ -107,8 +97,6 @@ class ModelArchive extends Command
 
     /**
      * Get all archivable models.
-     *
-     * @return Collection
      */
     private function getArchivables(): Collection
     {
@@ -127,7 +115,7 @@ class ModelArchive extends Command
 
                 if (class_exists($class)) {
                     $reflection = new \ReflectionClass($class);
-                    $valid = ! $reflection->isAbstract() && 
+                    $valid = ! $reflection->isAbstract() &&
                             $reflection->isSubclassOf(Model::class) &&
                             array_key_exists(Archivable::class, $reflection->getTraits());
                 }
