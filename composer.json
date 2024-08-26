@@ -3,14 +3,19 @@
   "description": "...",
   "type": "library",
   "license": "MIT",
-  "authors": [{
-    "name": "...",
-    "email": "lab2view@gmail.com"
-  }],
+  "authors": [
+    {
+      "name": "...",
+      "email": "lab2view@gmail.com"
+    }
+  ],
   "require": {
     "php": "^8.1|^8.2|^8.3",
     "illuminate/support": "^9.0|^10.9|^11.0",
-    "illuminate/console": "^9.0|^10.9|^11.0"
+    "illuminate/console": "^9.0|^10.9|^11.0",
+    "phpstan/phpstan": "^1.10",
+    "larastan/larastan": "^2.7",
+    "laravel/pint": "^1.8"
   },
   "minimum-stability": "stable",
   "autoload": {
@@ -30,5 +35,11 @@
     "laravel/pint": "^1.8",
     "orchestra/testbench": "^9.3",
     "larastan/larastan": "^2.9"
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true,
+      "phpstan/extension-installer": true
+    }
   }
 }

@@ -9,16 +9,29 @@ class ModelArchiveServiceProvider extends ServiceProvider
     /**
      * Register services.
      */
-    public function register(): void
-    {
-        //
-    }
+    public function register(): void {}
 
     /**
      * Bootstrap services.
      */
     public function boot(): void
     {
-        //
+        if ($this->app->runningInConsole()) {
+            // Publish command to archive model and command to verify that archive is done successfully
+            $this->commands([
+                \Lab2view\ModelArchive\Console\Commands\ModelArchive::class,
+                \Lab2view\ModelArchive\Console\Commands\ValidateModelArchive::class,
+            ]);
+
+            // Publish config file to overide model archive default configuration
+            $this->publishes([
+                __DIR__.'/../config/config.php' => config_path('model-archive.php'),
+            ], 'config');
+
+            // Publsh Migration of archives table
+            $this->publishes([
+                __DIR__.'/../database/migrations/create_archive_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_archive_table.php'),
+            ], 'migrations');
+        }
     }
 }
