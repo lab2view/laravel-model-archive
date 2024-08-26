@@ -61,12 +61,13 @@ class ModelArchive extends Command
                             $this->archive($relationValue, [], false);
                         }
                     }
+
+                    DB::commit();
+                    DB::connection($this->archiveDbConnection)->commit();
                 } catch (\Throwable $th) {
                     DB::rollBack();
                     DB::connection($this->archiveDbConnection)->rollBack();
                 }
-                DB::commit();
-                DB::connection($this->archiveDbConnection)->commit();
             }
             $this->comment('>> Archive of model '.$model.' done.');
         }
@@ -93,7 +94,7 @@ class ModelArchive extends Command
             'id' => $id,
         ];
 
-        DB::connection('archive')->table($model->getTable())->upsert($original, $uniqueBy, $original);
+        DB::connection($this->archiveDbConnection)->table($model->getTable())->upsert($original, $uniqueBy, $original);
 
         if ($commit) {
             (new Archive([
@@ -126,8 +127,9 @@ class ModelArchive extends Command
 
                 if (class_exists($class)) {
                     $reflection = new \ReflectionClass($class);
-                    $valid = $reflection->isSubclassOf(Model::class) &&
-                        ! $reflection->isAbstract() && array_key_exists(Archivable::class, $reflection->getTraits());
+                    $valid = ! $reflection->isAbstract() && 
+                            $reflection->isSubclassOf(Model::class) &&
+                            array_key_exists(Archivable::class, $reflection->getTraits());
                 }
 
                 return $valid;

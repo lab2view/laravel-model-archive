@@ -17,13 +17,13 @@ class ModelArchiveServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
-            // Publish command to archive model and command to verify that archive is done successfully
+            // Publish commands to archive archivable models and verify that archives is done successfully
             $this->commands([
                 \Lab2view\ModelArchive\Console\Commands\ModelArchive::class,
                 \Lab2view\ModelArchive\Console\Commands\ValidateModelArchive::class,
             ]);
 
-            // Publish config file to overide model archive default configuration
+            // Publish config file
             $this->publishes([
                 __DIR__.'/../config/config.php' => config_path('model-archive.php'),
             ], 'config');
