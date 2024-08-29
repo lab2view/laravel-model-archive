@@ -4,13 +4,12 @@ namespace Lab2view\ModelArchive\Scopes;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Scope; 
+use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\DB;
 
 class ArchivableScope implements Scope
 {
-
-    protected string $archiveConnection;
+    public function __construct(protected string $archiveConnection) {}
 
     /**
      * All of the extensions to be added to the builder.
@@ -85,7 +84,7 @@ class ArchivableScope implements Scope
         });
     }
 
-       /**
+    /**
      * Add the only-archived archived extension to the builder.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
@@ -93,7 +92,7 @@ class ArchivableScope implements Scope
      */
     public function addOnlyArchived(Builder $builder)
     {
-        $builder->macro('onlyArchived', function (Builder $builder) {  
+        $builder->macro('onlyArchived', function (Builder $builder) {
             $conn = DB::connection($this->archiveConnection);
 
             $query = $builder->getQuery();
