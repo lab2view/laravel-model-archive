@@ -13,7 +13,7 @@ trait Archivable
     /**
      * Database connection dedicated to archiving
      */
-    protected static $archiveConnection;
+    public static $archiveConnection;
 
     /**
      * Boot the archivable model.
@@ -22,10 +22,10 @@ trait Archivable
      */
     protected static function boot()
     {
-        if(!self::$archiveConnection){
+        if (! self::$archiveConnection) {
             self::$archiveConnection = Config::get('model-archive.archive_db_connection');
         }
-        parent::boot(); 
+        parent::boot();
     }
 
     /**
@@ -35,7 +35,7 @@ trait Archivable
      */
     public static function bootArchivable()
     {
-        static::addGlobalScope(new ArchivableScope);
+        static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
     }
 
     /**
