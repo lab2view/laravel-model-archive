@@ -1,3 +1,4 @@
+# lab2view/laravel-model-archive
 
 A simple package for making Laravel Eloquent models 'archivable'. This package allows for the easy archiving of models in a secondary database and provides the necessary macros to retrieve them when needed.
 
@@ -37,8 +38,27 @@ This package provides 2 commands to respectively copy the archivable models to t
 ```
 lab2view:model_archive
 lab2view:validate_model_archive
-```
+``````
+This commands require direct manipulation with the database by executing queries on the model defined as archiveable. For example, using the ```LadaCacheTrait``` trait of spiritix/lada-cache package implies that queries on models do not always return the ```Illuminate\Database\Eloquent\Builder``` interface but a builder version specific to this package based on the cache. In this case, it is necessary to execute the ```lada-cache:desable``` command before the commands and ```lada-cache:enable``` after.
 
+#### Between Commands 
+It is possible to register callables that will be called before or after commands or a specific command by registering them in the ```between_commands``` config. Example:
+
+``` php
+'between_commands' => [
+    'all' => [],
+    'before' => [
+        'all' => [],
+        'lab2view:model_archive' => [],
+        'lab2view:validate_model_archive' => []
+    ],
+    'after' => [
+        'all' => [],
+        'lab2view:model_archive' => [],
+        'lab2view:validate_model_archive' => []
+    ]
+]
+```
 #### Config
 
 Archiving needs to know the database to dedicate to archiving [archve_db_connection] and the main database from which to clone archiveable models [main_db_connection].
@@ -80,7 +100,7 @@ The extensions shipped with this trait include; `Archivable`, `Archived`, `Unarc
 $onlyArchivedSales = Sale::select('*')->onlyArchived();
 ```
 
-By default, the global scope of this trait uses the `unarchived` extension when the trait `Archivable` is added to a model.
+By default, the global scope of this trait uses the `unarchived` extension when the trait `Archivable` is added to a model. This prevents manipulation of archived models whose validation has not yet been done by the second command and which still exist in the source database.
 
 ## License
 
