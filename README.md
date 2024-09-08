@@ -45,19 +45,49 @@ This commands require direct manipulation with the database by executing queries
 It is possible to register callables that will be called before or after commands or a specific command by registering them in the ```between_commands``` config. Example:
 
 ``` php
-'between_commands' => [
-    'all' => [],
-    'before' => [
-        'all' => [],
-        'lab2view:model_archive' => [],
-        'lab2view:validate_model_archive' => []
-    ],
-    'after' => [
-        'all' => [],
-        'lab2view:model_archive' => [],
-        'lab2view:validate_model_archive' => []
+
+class BeforeAndAfterAnything {
+    public function __invoke()
+    {
+        // Do Anything after and before commands
+    }
+}
+
+class BeforeAnything {
+    public function __invoke()
+    {
+        Artisan::command("lada-cache:desable", ...);
+    }
+}
+
+class AfterAnything {
+    public function __invoke()
+    {
+        Artisan::command("lada-cache:enable", ...);
+    }
+}
+
+function afterModelArchive(){
+    // Do anything after the lab2view:model_archive command has been successfully executed
+}
+
+return [
+    ...,
+    'between_commands' => [
+        'all' => [new BeforeAndAfterAnything],
+        'before' => [
+            'all' => [new BeforeAnything],
+            'lab2view:model_archive' => ['afterModelArchive'],
+            'lab2view:validate_model_archive' => []
+        ],
+        'after' => [
+            'all' => [],
+            'lab2view:model_archive' => [],
+            'lab2view:validate_model_archive' => []
+        ]
     ]
-]
+];
+
 ```
 #### Config
 
