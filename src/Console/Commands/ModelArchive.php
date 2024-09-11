@@ -2,11 +2,11 @@
 
 namespace Lab2view\ModelArchive\Console\Commands;
 
-use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Traits\Archivable;
 
