@@ -16,7 +16,7 @@ class ArchivableScope implements Scope
      *
      * @var string[]
      */
-    protected $extensions = ['Archivable', 'Archived', 'Unarchived', 'OnlyArchived'];
+    protected $extensions = ['Archivable', 'Unarchived', 'OnlyArchived'];
 
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -59,19 +59,6 @@ class ArchivableScope implements Scope
     }
 
     /**
-     * Add the archived extension to the builder.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
-     * @return void
-     */
-    public function addArchived(Builder $builder)
-    {
-        $builder->macro('archived', function (Builder $builder) {
-            return $builder->whereHas('archive');
-        });
-    }
-
-    /**
      * Add the Unarchived extension to the builder.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
@@ -80,7 +67,14 @@ class ArchivableScope implements Scope
     public function addUnarchived(Builder $builder)
     {
         $builder->macro('unarchived', function (Builder $builder) {
-            return $builder->whereDoesntHave('archive');
+            $model = $builder->getModel();
+
+            return $builder->getQuery()->whereNotExists(function ($query) use ($model) {
+                $query->select(DB::raw(1))
+                    ->from('archives')
+                    ->whereRaw('archives.archivable_id = '.$model->getTable().'.id')
+                    ->where('archives.archivable_type', $model::class);
+            });
         });
     }
 
