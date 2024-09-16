@@ -16,7 +16,7 @@ class ArchivableScope implements Scope
      *
      * @var string[]
      */
-    protected $extensions = ['Archivable', 'Unarchived', 'OnlyArchived'];
+    protected $extensions = ['Unarchived', 'OnlyArchived'];
 
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -43,19 +43,6 @@ class ArchivableScope implements Scope
         foreach ($this->extensions as $extension) {
             $this->{"add{$extension}"}($builder);
         }
-    }
-
-    /**
-     * Add the archivable extension to the builder.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
-     * @return void
-     */
-    public function addArchivable(Builder $builder)
-    {
-        $builder->macro('archivable', function (Builder $builder) {
-            return $builder;
-        });
     }
 
     /**

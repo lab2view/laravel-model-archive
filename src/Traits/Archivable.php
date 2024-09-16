@@ -16,25 +16,15 @@ trait Archivable
     public static $archiveConnection;
 
     /**
-     * Boot the archivable model.
-     *
-     * @return void
-     */
-    protected static function boot()
-    {
-        if (! self::$archiveConnection) {
-            self::$archiveConnection = Config::get('model-archive.archive_db_connection');
-        }
-        parent::boot();
-    }
-
-    /**
      * Boot the archivable trait for a model.
      *
      * @return void
      */
     public static function bootArchivable()
-    {
+    { 
+        if (! self::$archiveConnection) { 
+            self::$archiveConnection = Config::get('model-archive.archive_db_connection');
+        }
         static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
     }
 
@@ -44,6 +34,15 @@ trait Archivable
     public function archive(): MorphOne
     {
         return $this->morphOne(Archive::class, 'archivable');
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
+     * @return \Illuminate\Database\Eloquent\Builder<*>
+     */
+    public function scopeArchivable($builder)
+    {
+        return $builder;
     }
 
     /**
