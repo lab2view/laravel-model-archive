@@ -18,11 +18,11 @@ class ValidateModelArchive extends Command
         $archives = Archive::select('*')->unvalidated()->get();
 
         foreach ($archives as $archive) {
-            $reflection = new \ReflectionClass($archive->archivable_type);
-            $isSoftDelete = array_key_exists(SoftDeletes::class, $reflection->getTraits());
-
+            /**
+             * @var array<class-string> $withoutGlobalScope
+             */
             $withoutGlobalScope = [ArchivableScope::class];
-            if ($isSoftDelete) {
+            if (array_key_exists(SoftDeletes::class, (new \ReflectionClass($archive->archivable_type))->getTraits())) {
                 array_push($withoutGlobalScope, SoftDeletes::class);
             }
 

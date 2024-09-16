@@ -21,8 +21,8 @@ trait Archivable
      * @return void
      */
     public static function bootArchivable()
-    { 
-        if (! self::$archiveConnection) { 
+    {
+        if (! self::$archiveConnection) {
             self::$archiveConnection = Config::get('model-archive.archive_db_connection');
         }
         static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
@@ -37,6 +37,8 @@ trait Archivable
     }
 
     /**
+     * Scope to filter only the archivables on model
+     *
      * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
      * @return \Illuminate\Database\Eloquent\Builder<*>
      */
