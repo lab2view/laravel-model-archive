@@ -21,10 +21,11 @@ trait Archivable
      * @return void
      */
     public static function bootArchivable()
-    { 
-        if (! self::$archiveConnection) { 
+    {
+        if (! self::$archiveConnection) {
             self::$archiveConnection = Config::get('model-archive.archive_db_connection');
         }
+
         static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
     }
 

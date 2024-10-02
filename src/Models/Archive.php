@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\Config;
 
 class Archive extends Model
 {
@@ -20,6 +21,10 @@ class Archive extends Model
         'archive_with',
     ];
 
+    public function getConnectionName(){
+        return Config::get('model-archive.archive_db_connection');
+    }
+    
     /**
      * Interact with the attribute archive_with.
      */
