@@ -16,7 +16,7 @@ class ArchivableScope implements Scope
      *
      * @var string[]
      */
-    protected $extensions = ['Unarchived', 'OnlyArchived'];
+    protected $extensions = ['Unarchived', 'OnlyArchived', 'Validated']; 
 
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -29,7 +29,7 @@ class ArchivableScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        $builder->unarchived();
+        //$builder->unarchived();
     }
 
     /**
@@ -66,6 +66,28 @@ class ArchivableScope implements Scope
     }
 
     /**
+     * Add the validated extension to the builder.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
+     * @return void
+     */
+    public function addValidated(Builder $builder)
+    {
+
+         $builder->macro('validated', function (Builder $builder) {
+            $model = $builder->getModel();
+
+            return $builder->getQuery()->whereExists(function ($query) use ($model) {
+                $query->select(DB::raw(1))
+                    ->from('archives')
+                    ->whereRaw('archives.archivable_id = '.$model->getTable().'.id')
+                    ->where('archives.archivable_type', $model::class)
+                    ->whereNotNull('archives.validated_at');
+            });
+        });
+    }
+
+    /**
      * Add the only-archived archived extension to the builder.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
@@ -81,7 +103,7 @@ class ArchivableScope implements Scope
             $query->grammar = $conn->query()->getGrammar();
             $query->processor = $conn->query()->getProcessor();
 
-            return $builder->setQuery($query);
+            return $builder->setQuery($query)->validated();
         });
     }
 }
