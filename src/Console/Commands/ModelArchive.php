@@ -3,6 +3,7 @@
 namespace Lab2view\ModelArchive\Console\Commands;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -29,7 +30,8 @@ class ModelArchive extends Command
             $archive_with = $model::$archive_with;
 
             /** @var \Illuminate\Database\Eloquent\Builder $query */
-            $query = $model::select('*')
+            $query = $model::withoutGlobalScopes(array_key_exists(SoftDeletes::class, (new \ReflectionClass($model))->getTraits()) ? [SoftDeletes::class] : [])
+                ->select('*')
                 ->archivable()
                 ->with($archive_with);
 
