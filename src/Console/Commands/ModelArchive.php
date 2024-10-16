@@ -41,7 +41,7 @@ class ModelArchive extends Command
                 DB::beginTransaction();
                 DB::connection($archiveConnection)->beginTransaction();
 
-                try {
+                
                     $this->archive($item, $archive_with, $archiveConnection);
                     foreach ($archive_with as $relation) {
                         if (! ($item->$relation() instanceof \Illuminate\Database\Eloquent\Relations\BelongsTo)) {
@@ -59,10 +59,10 @@ class ModelArchive extends Command
 
                     DB::commit();
                     DB::connection($archiveConnection)->commit();
-                } catch (\Throwable $th) {
+                
                     DB::rollBack();
                     DB::connection($archiveConnection)->rollBack();
-                }
+                
             }
             $this->comment('>> Archive of model '.$model.' done.');
         }
