@@ -41,11 +41,11 @@ class ValidateModelArchive extends Command
                 }
             }
 
-            // if($isSoftDelete){
-            //     $archived->forceDelete();
-            // }else{
-            //     $archived->delete();
-            // }
+            if($isSoftDelete){
+                $archived->forceDelete();
+            }else{
+                $archived->delete();
+            }
         }
 
         $this->comment('>> Validation of the archives done.');
