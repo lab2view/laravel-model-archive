@@ -33,7 +33,6 @@ class ValidateModelArchive extends Command
                 ->select('*')
                 ->first();
 
-            Log::info('archive', $archived);
             if ($archived) {
                 $archived->archive = $archive;
 
@@ -42,9 +41,14 @@ class ValidateModelArchive extends Command
                     $archive->save();
                 }
 
-                if($isSoftDelete){
+                Log::info('deletion', [
+                    'is' => $isSoftDelete,
+                    'a' => $archived,
+                ]);
+                
+                if ($isSoftDelete) {
                     $archived->forceDelete();
-                }else{
+                } else {
                     $archived->delete();
                 }
             }
