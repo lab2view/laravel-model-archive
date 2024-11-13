@@ -3,6 +3,7 @@
 namespace Lab2view\ModelArchive\Console\Commands;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Log;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Scopes\ArchivableScope;
@@ -32,6 +33,7 @@ class ValidateModelArchive extends Command
                 ->select('*')
                 ->first();
 
+            Log::info('archive', $archived);
             if ($archived) {
                 $archived->archive = $archive;
 
@@ -39,12 +41,12 @@ class ValidateModelArchive extends Command
                     $archive->validated_at = now();
                     $archive->save();
                 }
-            }
 
-            if($isSoftDelete){
-                $archived->forceDelete();
-            }else{
-                $archived->delete();
+                if($isSoftDelete){
+                    $archived->forceDelete();
+                }else{
+                    $archived->delete();
+                }
             }
         }
 
