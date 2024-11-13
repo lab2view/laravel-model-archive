@@ -35,17 +35,18 @@ class ValidateModelArchive extends Command
 
             if ($archived) {
                 $archived->archive = $archive;
+                Log::info('deletion', [
+                    'isSoftDelete' => $isSoftDelete,
+                    'id' => $archived->id,
+                    "valid" => $archived->validateArchive()
+                ]);
+                
 
                 if ($archived->validateArchive()) {
                     $archive->validated_at = now();
                     $archive->save();
                 }
 
-                Log::info('deletion', [
-                    'is' => $isSoftDelete,
-                    'a' => $archived,
-                ]);
-                
                 if ($isSoftDelete) {
                     $archived->forceDelete();
                 } else {
