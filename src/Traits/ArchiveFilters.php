@@ -17,7 +17,7 @@ trait ArchiveFilters
         $readArchiveWhenDaysBefore = $this->readArchiveWhenDaysBefore;
 
         Log::info('', [
-            'sub' => (now()->subDays($readArchiveWhenDaysBefore)->gte(Carbon::parse($date)))
+            'sub' => (now()->subDays($readArchiveWhenDaysBefore)->gte(Carbon::parse($date))),
         ]);
         if (
             (now()->subDays($readArchiveWhenDaysBefore)->gte(Carbon::parse($date)))

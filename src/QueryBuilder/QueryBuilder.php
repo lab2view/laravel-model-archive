@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
  * Class QueryBuilder
  *
  * @method static static onlyArchived()
+ *
  * @property string $archiveConnection
  */
 class QueryBuilder extends EloquentBuilder
@@ -29,6 +30,7 @@ class QueryBuilder extends EloquentBuilder
             self::onlyArchived();
             $collection = parent::get($columns);
         }
+
         return $collection;
     }
 
@@ -48,11 +50,11 @@ class QueryBuilder extends EloquentBuilder
     public function fallbackToArchive(bool $to = true): static
     {
         $this->fallbackToArchive = $to;
-        if($this->fallbackToArchive){
+        if ($this->fallbackToArchive) {
             Log::info('', [
-                'eagerLoadRelation_model' => 'true'
+                'eagerLoadRelation_model' => 'true',
             ]);
-            $this->macro('_fallbackToArchive', macro: fn() => $this->getConnection());
+            $this->macro('_fallbackToArchive', macro: fn () => $this->getConnection());
         }
 
         return $this;
@@ -60,14 +62,19 @@ class QueryBuilder extends EloquentBuilder
 
     public function getRelation($name)
     {
-        $relation = parent::getRelation($name); 
+        $relation = parent::getRelation($name);
+
         return $relation;
     }
 
     protected function eagerLoadRelation(array $models, $name, \Closure $constraints)
     {
         $relation = $this->getRelation($name);
-        if($this->hasMacro('_fallbackToArchive')){
+        Log::info('', [
+            'eagerLoadRelation_$this->getMacro' => $this->getMacro('_fallbackToArchive'),
+            'eagerLoadRelation_$this->getQuery()>getMacro' => $this->getQuery()->getMacro('_fallbackToArchive'),
+        ]);
+        if ($this->hasMacro('_fallbackToArchive')) {
             $relation->getQuery()->macro('_fallbackToArchive', $this->getMacro('_fallbackToArchive'));
         }
 
@@ -79,10 +86,10 @@ class QueryBuilder extends EloquentBuilder
         Log::info('', [
             'eagerLoadRelation_model' => $relation->getModel()::class,
             'eagerLoadRelation_eager' => $eager->isEmpty(),
-            'eagerLoadRelation_hasmacro' => $relation->getQuery()->hasMacro('_fallbackToArchive')
+            'eagerLoadRelation_hasmacro' => $relation->getQuery()->hasMacro('_fallbackToArchive'),
         ]);
 
-        if($eager->isEmpty() && $relation->getQuery()->hasMacro('_fallbackToArchive')){
+        if ($eager->isEmpty() && $relation->getQuery()->hasMacro('_fallbackToArchive')) {
             $query = $relation->getBaseQuery();
             $conn = $relation->getQuery()->getMacro('_fallbackToArchive')();
             $query->connection = $conn;
@@ -93,10 +100,10 @@ class QueryBuilder extends EloquentBuilder
             });
             $eager = $relation->getEager();
         }
+
         return $relation->match(
             $relation->initRelation($models, $name),
             $eager, $name
         );
     }
 }
- 
