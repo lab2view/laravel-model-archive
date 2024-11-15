@@ -84,7 +84,7 @@ class QueryBuilder extends EloquentBuilder
 
         if($eager->isEmpty() && $relation->getBaseQuery()->hasMacro('_fallbackToArchive')){
             $query = $relation->getBaseQuery();
-            $conn = $relation->getQuery()->getMacro('_fallbackToArchive')();
+            $conn = $relation->getBaseQuery()->getMacro('_fallbackToArchive')();
             $query->connection = $conn;
             $query->grammar = $conn->query()->getGrammar();
             $query->processor = $conn->query()->getProcessor();
