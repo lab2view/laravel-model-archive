@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ArchivableScope implements Scope
 {
@@ -104,7 +105,7 @@ class ArchivableScope implements Scope
             $query->processor = $conn->query()->getProcessor();
             $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
 
-
+            Log::info('macro added');
             return $builder->setQuery($query)->validated();
         });
 
