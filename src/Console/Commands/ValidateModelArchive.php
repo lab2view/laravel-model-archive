@@ -3,7 +3,6 @@
 namespace Lab2view\ModelArchive\Console\Commands;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Log;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Scopes\ArchivableScope;
@@ -29,7 +28,7 @@ class ValidateModelArchive extends Command
 
             $archived = $archive->archivable_type::withoutGlobalScopes($withoutGlobalScope)
                 ->where('id', $archive->archivable_id)
-                ->with($archive->archive_with)
+                ->with($archive->archive_with ?? [])
                 ->select('*')
                 ->first();
 
