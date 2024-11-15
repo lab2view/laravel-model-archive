@@ -4,6 +4,7 @@ namespace Lab2view\ModelArchive\QueryBuilder;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -61,7 +62,7 @@ class QueryBuilder extends EloquentBuilder
     }
 
     public function getRelation($name)
-    { 
+    {
         $relation = parent::getRelation($name);
 
         return $relation;
@@ -101,5 +102,20 @@ class QueryBuilder extends EloquentBuilder
             $relation->initRelation($models, $name),
             $eager, $name
         );
+    }
+
+    protected function onlyArchived()
+    {
+        $conn = DB::connection($this->archiveConnection);
+
+        $query = $this->getQuery();
+        $query->connection = $conn;
+        $query->grammar = $conn->query()->getGrammar();
+        $query->processor = $conn->query()->getProcessor();
+        $this->setQuery($query)->validated();
+
+        $this->macro('_fallbackToArchive', macro: fn () => $this->getConnection());
+
+        return $this;
     }
 }

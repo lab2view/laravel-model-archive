@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ArchivableScope implements Scope
 {
@@ -96,20 +95,7 @@ class ArchivableScope implements Scope
      */
     public function addOnlyArchived($builder)
     {
-        $builder->macro('onlyArchived', function ($builder) {
-            $conn = DB::connection($this->archiveConnection);
-
-            $query = $builder->getQuery();
-            $query->connection = $conn;
-            $query->grammar = $conn->query()->getGrammar();
-            $query->processor = $conn->query()->getProcessor();
-            $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
-
-            Log::info('archivescope',  ['addOnlyArchived 1111'=>$builder->getQuery()]);
-            return $builder->setQuery($query)->validated();
-        });
-            Log::info('archivescope',  ['addOnlyArchived 2222'=>$builder->getQuery()]);
-
-        $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
+        
+        
     }
 }
