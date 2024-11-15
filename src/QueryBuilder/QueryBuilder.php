@@ -68,7 +68,7 @@ class QueryBuilder extends EloquentBuilder
     {
         $relation = $this->getRelation($name);
         if($this->hasMacro('_fallbackToArchive')){
-            $relation->getBaseQuery()->macro('_fallbackToArchive', $this->getMacro('_fallbackToArchive'));
+            $relation->getQuery()->macro('_fallbackToArchive', $this->getMacro('_fallbackToArchive'));
         }
 
         $relation->addEagerConstraints($models);
@@ -79,12 +79,12 @@ class QueryBuilder extends EloquentBuilder
         Log::info('', [
             'eagerLoadRelation_model' => $relation->getModel()::class,
             'eagerLoadRelation_eager' => $eager->isEmpty(),
-            'eagerLoadRelation_hasmacro' => $relation->getBaseQuery()->hasMacro('_fallbackToArchive')
+            'eagerLoadRelation_hasmacro' => $relation->getQuery()->hasMacro('_fallbackToArchive')
         ]);
 
-        if($eager->isEmpty() && $relation->getBaseQuery()->hasMacro('_fallbackToArchive')){
+        if($eager->isEmpty() && $relation->getQuery()->hasMacro('_fallbackToArchive')){
             $query = $relation->getBaseQuery();
-            $conn = $relation->getBaseQuery()->getMacro('_fallbackToArchive')();
+            $conn = $relation->getQuery()->getMacro('_fallbackToArchive')();
             $query->connection = $conn;
             $query->grammar = $conn->query()->getGrammar();
             $query->processor = $conn->query()->getProcessor();
