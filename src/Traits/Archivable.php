@@ -25,8 +25,9 @@ trait Archivable
         if (! self::$archiveConnection) {
             self::$archiveConnection = Config::get('model-archive.archive_db_connection');
         }
-
-        static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
+        if (self::$archiveConnection) {
+            static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
+        }
     }
 
     /**
@@ -56,7 +57,7 @@ trait Archivable
 
         if ($archive) {
             /** @var array<string> $archive_with */
-            $archiveWith = $archive->archive_with;
+            $archiveWith = $archive->archive_with ?? [];
 
             $archived = DB::connection(static::$archiveConnection)->table($this->getTable())->where('id', $this->id)->first();
 

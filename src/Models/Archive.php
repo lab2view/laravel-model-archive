@@ -21,10 +21,11 @@ class Archive extends Model
         'archive_with',
     ];
 
-    public function getConnectionName(){
+    public function getConnectionName()
+    {
         return Config::get('model-archive.archive_db_connection');
     }
-    
+
     /**
      * Interact with the attribute archive_with.
      */
