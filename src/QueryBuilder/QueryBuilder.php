@@ -59,7 +59,8 @@ class QueryBuilder extends EloquentBuilder
         $this_conn = $this->getConnection();
         $relation__conn = $relation->getQuery()->getModel()->getConnection();
 
-        $archive_with = $this->getModel()->archive_with ?? [];
+        dd($this->getModel());
+        $archive_with = $this->getModel()::$archive_with ?? [];
         Log::info('', ["archiveWith" => $archive_with, "model" => $this->getModel()::class]);
 
         if (
