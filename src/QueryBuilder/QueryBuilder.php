@@ -28,7 +28,7 @@ class QueryBuilder extends EloquentBuilder
     public function get($columns = ['*']): Collection|array
     {
         if (($collection = parent::get($columns))->isEmpty() && $this->fallbackToArchive) {
-            self::onlyArchived();
+            $this::onlyArchived();
             $collection = parent::get($columns);
         }
 
@@ -38,7 +38,7 @@ class QueryBuilder extends EloquentBuilder
     public function exists(): bool
     {
         if (($exists = parent::exists()) == false && $this->fallbackToArchive) {
-            self::onlyArchived();
+            $this::onlyArchived();
             $exists = parent::exists();
         }
 
