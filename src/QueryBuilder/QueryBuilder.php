@@ -70,10 +70,6 @@ class QueryBuilder extends EloquentBuilder
     protected function eagerLoadRelation(array $models, $name, \Closure $constraints)
     {
         $relation = $this->getRelation($name);
-        Log::info('', [
-            'eagerLoadRelation_$this->getMacro' => $this->getMacro('_fallbackToArchive'),
-            'eagerLoadRelation_$this->getQuery()>getMacro' => $this->getQuery()->getMacro('_fallbackToArchive'),
-        ]);
         if ($this->hasMacro('_fallbackToArchive')) {
             $relation->getQuery()->macro('_fallbackToArchive', $this->getMacro('_fallbackToArchive'));
         }
