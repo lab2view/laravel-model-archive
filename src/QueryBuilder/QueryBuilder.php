@@ -58,6 +58,9 @@ class QueryBuilder extends EloquentBuilder
     public function getRelation($name)
     {
         $relation = parent::getRelation($name);
+         Log::info('', [ 
+            'getRelation_Hasmacro' => $this->getBaseQuery()->hasMacro('_fallbackToArchive')
+        ]);
         if($this->hasMacro('_fallbackToArchive')){
             $relation->getBaseQuery()->macro('_fallbackToArchive', $this->getMacro('_fallbackToArchive'));
         }
@@ -74,8 +77,9 @@ class QueryBuilder extends EloquentBuilder
 
         $eager = $relation->getEager();
         Log::info('', [
-            'eager' => $eager->isEmpty(),
-            'hasmacro' => $relation->getBaseQuery()->hasMacro('_fallbackToArchive')
+            'eagerLoadRelation_model' => $relation->getModel()::class,
+            'eagerLoadRelation_eager' => $eager->isEmpty(),
+            'eagerLoadRelation_hasmacro' => $relation->getBaseQuery()->hasMacro('_fallbackToArchive')
         ]);
 
         if($eager->isEmpty() && $relation->getBaseQuery()->hasMacro('_fallbackToArchive')){
@@ -87,10 +91,11 @@ class QueryBuilder extends EloquentBuilder
             $query->macro('_fallbackToArchive', function () {
                 return true;
             });
+            $eager = $relation->getEager();
         }
         return $relation->match(
             $relation->initRelation($models, $name),
-            $relation->getEager(), $name
+            $eager, $name
         );
     }
 }
