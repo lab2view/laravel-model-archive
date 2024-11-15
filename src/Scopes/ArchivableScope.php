@@ -71,10 +71,10 @@ class ArchivableScope implements Scope
      * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
      * @return void
      */
-    public function addValidated(Builder $builder)
+    public function addValidated($builder)
     {
 
-        $builder->macro('validated', function (Builder $builder) {
+        $builder->macro('validated', function ($builder) {
             $model = $builder->getModel();
 
             return $builder->getQuery()->whereExists(function ($query) use ($model) {
@@ -93,9 +93,9 @@ class ArchivableScope implements Scope
      * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
      * @return void
      */
-    public function addOnlyArchived(Builder $builder)
+    public function addOnlyArchived($builder)
     {
-        $builder->macro('onlyArchived', function (Builder $builder) {
+        $builder->macro('onlyArchived', function ($builder) {
             $conn = DB::connection($this->archiveConnection);
 
             $query = $builder->getQuery();
