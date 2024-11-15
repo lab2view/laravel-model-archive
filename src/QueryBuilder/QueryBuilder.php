@@ -58,12 +58,12 @@ class QueryBuilder extends EloquentBuilder
     public function getRelation($name)
     {
         $relation = parent::getRelation($name);
-         Log::info('', [ 
-            'getRelation_Hasmacro' => $this->getBaseQuery()->hasMacro('_fallbackToArchive')
-        ]);
         if($this->hasMacro('_fallbackToArchive')){
             $relation->getBaseQuery()->macro('_fallbackToArchive', $this->getMacro('_fallbackToArchive'));
         }
+        Log::info('', [ 
+            'getRelation_Hasmacro' => $relation->getBaseQuery()->hasMacro('_fallbackToArchive')
+        ]);
         return $relation;
     }
 
