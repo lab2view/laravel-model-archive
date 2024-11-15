@@ -73,6 +73,10 @@ class QueryBuilder extends EloquentBuilder
         $constraints($relation);
 
         $eager = $relation->getEager();
+        Log::info('', [
+            'eager' => $eager->isEmpty(),
+            'hasmacro' => $relation->getBaseQuery()->hasMacro('_fallbackToArchive')
+        ]);
 
         if($eager->isEmpty() && $relation->getBaseQuery()->hasMacro('_fallbackToArchive')){
             $query = $relation->getBaseQuery();
@@ -90,3 +94,4 @@ class QueryBuilder extends EloquentBuilder
         );
     }
 }
+ 
