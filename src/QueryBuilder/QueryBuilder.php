@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
  * Class QueryBuilder
  *
  * @method static static onlyArchived()
+ * @property string $archiveConnection
  */
 class QueryBuilder extends EloquentBuilder
 {
@@ -28,7 +29,6 @@ class QueryBuilder extends EloquentBuilder
             self::onlyArchived();
             $collection = parent::get($columns);
         }
-
         return $collection;
     }
 
@@ -48,6 +48,9 @@ class QueryBuilder extends EloquentBuilder
     public function fallbackToArchive(bool $to = true): static
     {
         $this->fallbackToArchive = $to;
+        if($this->fallbackToArchive){
+            $this->macro('_fallbackToArchive', fn() => $this->getConnection());
+        }
 
         return $this;
     }
@@ -55,29 +58,35 @@ class QueryBuilder extends EloquentBuilder
     public function getRelation($name)
     {
         $relation = parent::getRelation($name);
+        if($this->hasMacro('_fallbackToArchive')){
+            $relation->getBaseQuery()->macro('_fallbackToArchive', $this->getMacro('_fallbackToArchive'));
+        }
+        return $relation;
+    }
 
-        $this_conn = $this->getConnection();
-        $relation__conn = $relation->getQuery()->getModel()->getConnection();
+    protected function eagerLoadRelation(array $models, $name, \Closure $constraints)
+    {
+        $relation = $this->getRelation($name);
 
-        $archive_with = $this->getModel()::class;
-        $archive_with = $archive_with::archive_with ?? [];
-        Log::info('', ['archiveWith' => $archive_with, 'model' => $this->getModel()::class]);
+        $relation->addEagerConstraints($models);
 
-        if (
-            ($this->fallbackToArchive || $this->hasMacro('_fallbackToArchive')) &&
-             $this_conn->getDatabaseName() !== $relation__conn->getDatabaseName() &&
-             ! $relation->getQuery()->exists()
-        ) {
+        $constraints($relation);
 
+        $eager = $relation->getEager();
+
+        if($eager->isEmpty() && $relation->getBaseQuery()->hasMacro('_fallbackToArchive')){
             $query = $relation->getBaseQuery();
-            $query->connection = $this_conn;
-            $query->grammar = $this_conn->query()->getGrammar();
-            $query->processor = $this_conn->query()->getProcessor();
+            $conn = $relation->getQuery()->getMacro('_fallbackToArchive')();
+            $query->connection = $conn;
+            $query->grammar = $conn->query()->getGrammar();
+            $query->processor = $conn->query()->getProcessor();
             $query->macro('_fallbackToArchive', function () {
                 return true;
             });
         }
-
-        return $relation;
+        return $relation->match(
+            $relation->initRelation($models, $name),
+            $relation->getEager(), $name
+        );
     }
 }
