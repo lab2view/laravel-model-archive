@@ -61,7 +61,7 @@ class QueryBuilder extends EloquentBuilder
     }
 
     public function getRelation($name)
-    {
+    { 
         $relation = parent::getRelation($name);
 
         return $relation;
