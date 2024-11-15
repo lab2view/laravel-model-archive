@@ -3,6 +3,7 @@
 namespace Lab2view\ModelArchive\Traits;
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use lab2view\ModelArchive\QueryBuilder\QueryBuilder;
 
 trait ArchiveFilters
@@ -11,12 +12,14 @@ trait ArchiveFilters
     {
         $builder->where('created_at', '<=', $date);
         /**
-         * @var int|null $readArchiveWhenDaysBefore
+         * @var int $readArchiveWhenDaysBefore
          */
-        $readArchiveWhenDaysBefore = $this->readArchiveWhenDaysBefore ?? null;
+        $readArchiveWhenDaysBefore = $this->readArchiveWhenDaysBefore;
 
+        Log::info('', [
+            'sub' => (now()->subDays($readArchiveWhenDaysBefore)->gte(Carbon::parse($date)))
+        ]);
         if (
-            $readArchiveWhenDaysBefore &&
             (now()->subDays($readArchiveWhenDaysBefore)->gte(Carbon::parse($date)))
         ) {
             $builder->onlyArchived();
