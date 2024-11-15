@@ -36,7 +36,7 @@ trait ArchiveFilters
     public function scopeArchived(QueryBuilder $builder, string $archived): QueryBuilder
     {
         if (in_array($archived, ['true', '1'])) {
-            $builder->clone()->onlyArchived();
+            $builder->onlyArchived();
         }
 
         return $builder;

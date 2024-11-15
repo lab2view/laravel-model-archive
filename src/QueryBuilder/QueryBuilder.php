@@ -52,7 +52,7 @@ class QueryBuilder extends EloquentBuilder
             Log::info('', [
                 'eagerLoadRelation_model' => 'true'
             ]);
-            $this->macro('_fallbackToArchive', fn() => $this->getConnection());
+            $this->macro('_fallbackToArchive', macro: fn() => $this->getConnection());
         }
 
         return $this;
