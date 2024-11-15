@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Lab2view\ModelArchive\Models\Archive;
+use Lab2view\ModelArchive\QueryBuilder\QueryBuilder;
 use Lab2view\ModelArchive\Scopes\ArchivableScope;
 
 trait Archivable
@@ -84,5 +85,10 @@ trait Archivable
         }
 
         return true;
+    }
+
+    public function newEloquentBuilder($builder): QueryBuilder
+    {
+        return new QueryBuilder($builder);
     }
 }
