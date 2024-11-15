@@ -105,9 +105,10 @@ class ArchivableScope implements Scope
             $query->processor = $conn->query()->getProcessor();
             $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
 
-            Log::info('macro added');
+            Log::info('archivescope',  ['addOnlyArchived 1111'=>$builder->getQuery()]);
             return $builder->setQuery($query)->validated();
         });
+            Log::info('archivescope',  ['addOnlyArchived 2222'=>$builder->getQuery()]);
 
         $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
     }
