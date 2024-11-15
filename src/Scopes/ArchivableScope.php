@@ -16,7 +16,7 @@ class ArchivableScope implements Scope
      *
      * @var string[]
      */
-    protected $extensions = ['Unarchived', 'OnlyArchived', 'Validated']; 
+    protected $extensions = ['Unarchived', 'OnlyArchived', 'Validated'];
 
     /**
      * Apply the scope to a given Eloquent query builder.
@@ -74,7 +74,7 @@ class ArchivableScope implements Scope
     public function addValidated(Builder $builder)
     {
 
-         $builder->macro('validated', function (Builder $builder) {
+        $builder->macro('validated', function (Builder $builder) {
             $model = $builder->getModel();
 
             return $builder->getQuery()->whereExists(function ($query) use ($model) {
