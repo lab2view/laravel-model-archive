@@ -61,12 +61,14 @@ class QueryBuilder extends EloquentBuilder
 
         $archive_with = $this->getModel()::class;
         $archive_with = $archive_with::archive_with ?? [];
-        Log::info('', ["archiveWith" => $archive_with, "model" => $this->getModel()::class]);
+        Log::info('', ['archiveWith' => $archive_with, 'model' => $this->getModel()::class]);
 
         if (
-            in_array($name, $archive_with) &&
-            $this_conn->getDatabaseName() !== $relation__conn->getDatabaseName()
+            ($this->fallbackToArchive || $this->hasMacro('_fallbackToArchive')) &&
+             $this_conn->getDatabaseName() !== $relation__conn->getDatabaseName() &&
+             ! $relation->getQuery()->exists()
         ) {
+
             $query = $relation->getBaseQuery();
             $query->connection = $this_conn;
             $query->grammar = $this_conn->query()->getGrammar();
