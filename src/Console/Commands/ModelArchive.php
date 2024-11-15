@@ -27,7 +27,7 @@ class ModelArchive extends Command
 
         foreach ($models as $model) {
 
-            $archive_with = $model::$archive_with;
+            $archive_with = $model::$archive_with ?? [];
 
             /** @var \Illuminate\Database\Eloquent\Builder $query */
             $query = $model::withoutGlobalScopes(array_key_exists(SoftDeletes::class, (new \ReflectionClass($model))->getTraits()) ? [SoftDeletes::class] : [])
