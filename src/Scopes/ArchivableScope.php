@@ -103,7 +103,7 @@ class ArchivableScope implements Scope
             $query->grammar = $conn->query()->getGrammar();
             $query->processor = $conn->query()->getProcessor();
             $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
-            $builder->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
+            $builder->macro(['_fallbackToArchive', fn () => $builder->getConnection()]);
 
             return $builder->setQuery($query)->validated();
         });
