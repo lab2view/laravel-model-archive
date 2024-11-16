@@ -32,6 +32,10 @@ class QueryBuilder extends EloquentBuilder
             $collection = parent::get($columns);
         }
 
+        Log::info('', ['macros' => $this->getMacros()]);
+        $this->onlyArchived2();
+        Log::info('', ['macros' => $this->getMacros()]);
+
         return $collection;
     }
 
@@ -103,17 +107,8 @@ class QueryBuilder extends EloquentBuilder
             $eager, $name
         );
     }
-
-    protected function onlyArchived()
+    protected function onlyArchived2()
     {
-        $conn = DB::connection($this->archiveConnection);
-
-        $query = $this->getQuery();
-        $query->connection = $conn;
-        $query->grammar = $conn->query()->getGrammar();
-        $query->processor = $conn->query()->getProcessor();
-        $this->setQuery($query)->validated();
-
         $this->macro('_fallbackToArchive', macro: fn () => $this->getConnection());
 
         return $this;

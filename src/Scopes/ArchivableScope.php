@@ -95,7 +95,18 @@ class ArchivableScope implements Scope
      */
     public function addOnlyArchived($builder)
     {
-        
-        
+        $builder->macro('onlyArchived', function ($builder) {
+            $conn = DB::connection($this->archiveConnection);
+
+            $query = $builder->getQuery();
+            $query->connection = $conn;
+            $query->grammar = $conn->query()->getGrammar();
+            $query->processor = $conn->query()->getProcessor();
+            $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
+
+            return $builder->setQuery($query)->validated();
+        });
+
+        $builder->getQuery()->macro('_fallbackToArchive', macro: fn () => $builder->getConnection());
     }
 }
