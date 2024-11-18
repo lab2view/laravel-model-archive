@@ -2,10 +2,10 @@
 
 namespace Lab2view\ModelArchive\Models;
 
-use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Config;
 use Lab2view\ModelArchive\Traits\Archivable;
 
@@ -40,7 +40,7 @@ class Archive extends Model
     protected function archiveWith(): Attribute
     {
         return Attribute::make(
-            get: fn (string $value) => $value ? json_decode($value) : [] ,
+            get: fn (string $value) => $value ? json_decode($value) : [],
             set: fn (array $value) => json_encode($value),
         );
     }
@@ -55,7 +55,8 @@ class Archive extends Model
 
     /**
      * Scope request to retrieve archives that have not yet been validated
-     * @param Builder<Archivable> $query
+     *
+     * @param  Builder<Archivable>  $query
      * @return Builder<Archivable>
      */
     public function scopeUnvalidated(Builder $query): Builder

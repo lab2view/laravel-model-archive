@@ -2,15 +2,16 @@
 
 namespace Lab2view\ModelArchive\Console\Commands;
 
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File; 
+use Illuminate\Support\Facades\File;
+use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Traits\Archivable;
 use Lab2view\ModelArchive\Traits\ReadArchive;
-use Lab2view\ModelArchive\Console\Commands\Base\Command; 
+
 class ArchiveModel extends Command
 {
     protected $signature = 'lab2view:archive-model';
@@ -33,7 +34,7 @@ class ArchiveModel extends Command
             $archiveWith = $instance->getArchiveWith();
             $archiveConnection = $instance->getArchiveConnection();
 
-            $archivablesQuery = $archivable::withoutGlobalScopes()
+            $archivablesQuery = $archivable::withoutGlobalScopes(class_uses_recursive($archivable))
                 ->archivable()
                 ->select('*')
                 ->with($archiveWith);
@@ -51,10 +52,12 @@ class ArchiveModel extends Command
                         $relationClass = $model->$relation();
                         if (! ($relationClass instanceof BelongsTo)) {
                             $this->comment(">> The relation $archivable -> $relation is not instanceof BelongTo. There are not archived");
+
                             continue;
                         }
                         if (! in_array(ReadArchive::class, class_uses_recursive($relationClass->getQuery()->getModel()::class))) {
                             $this->error(">> The relation $archivable -> $relation model does not use ReadArchive trait.");
+
                             return self::FAILURE;
                         }
                         $relation = $model->$relation;
@@ -81,7 +84,7 @@ class ArchiveModel extends Command
     /**
      * Copy a model to the archive database
      *
-     * @param Archivable $model
+     * @param  Archivable  $model
      * @param  array<string>  $archiveWith
      */
     private function archive(Model $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
@@ -98,10 +101,10 @@ class ArchiveModel extends Command
                 $uniqueBy,
                 $original
             );
-        
+
         if ($commit) {
             $data = ['archivable_id' => $id, 'archivable_type' => $modelName, 'archive_with' => $archiveWith];
-            if(!Archive::where(['archivable_id' => $id, 'archivable_type' => $modelName])->exists()){
+            if (! Archive::where(['archivable_id' => $id, 'archivable_type' => $modelName])->exists()) {
                 Archive::create($data);
             }
         }

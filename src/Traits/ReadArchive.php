@@ -52,7 +52,7 @@ trait ReadArchive
         return $this->archiveWith ?? [];
     }
 
-    public function getUniqueBy(): array 
+    public function getUniqueBy(): array
     {
         $uniqueBy = [];
         foreach ($this->uniqueBy ?? ['id' => 'id'] as $field => $value) {

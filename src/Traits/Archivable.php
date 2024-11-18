@@ -9,10 +9,10 @@ use Lab2view\ModelArchive\Models\Archive;
 
 /**
  * @template TModel of Model
+ *
  * @mixin TModel
  *
  * class Archivable
- *
  */
 trait Archivable
 {
@@ -49,15 +49,18 @@ trait Archivable
          */
         $selfWith = $this->with ?? [];
         $withOnSelf = array_filter($archiveWith, fn ($w) => in_array($w, $selfWith));
+
         /**
          * @var static | null $archive
          */
-        $archive = static::withoutGlobalScopes()
+        $archive = self::query()
+            ->clone()
+            ->withoutGlobalScopes()
             ->where($this->getUniqueBy())
             ->onlyArchived()
             ->with($withOnSelf)
             ->first();
-            
+
         if ($archive) {
             foreach ($archiveWith as $relation) {
                 if ($this->$relation !== null && $archive->$relation == null) {
@@ -68,5 +71,4 @@ trait Archivable
 
         return true;
     }
-
 }
