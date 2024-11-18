@@ -3,6 +3,8 @@
 namespace Lab2view\ModelArchive;
 
 use Illuminate\Support\ServiceProvider;
+use Lab2view\ModelArchive\Console\Commands\ArchiveModel;
+use Lab2view\ModelArchive\Console\Commands\ValidateArchiveModel;
 
 class ModelArchiveServiceProvider extends ServiceProvider
 {
@@ -17,11 +19,8 @@ class ModelArchiveServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
-            // Publish commands to archive archivable models and verify that archives is done successfully
-            $this->commands([
-                \Lab2view\ModelArchive\Console\Commands\ArchiveModel::class,
-                \Lab2view\ModelArchive\Console\Commands\ValidateArchiveModel::class,
-            ]);
+            // Publish commands to archive archivable models and verify that archives is completed successfully
+            $this->commands([ValidateArchiveModel::class, ArchiveModel::class]);
 
             // Publish config file
             $this->publishes([

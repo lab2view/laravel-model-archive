@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string("archive_with");
             $table->morphs("archivable");
-            $table->timestamp('validated_at')->nullable();
+            $table->timestamp('validated_at')->nullable()->index();
             $table->timestamps();
         });
     }
