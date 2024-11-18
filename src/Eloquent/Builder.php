@@ -27,28 +27,30 @@ class Builder extends EloquentBuilder
     /**
      * Determine the relationship recovery strategy. Defunct whether to search for the element on the previous connection if it is not found
      */
-    protected bool $fallback = false;
+    protected bool $fallbackRelation = false;
 
     /**
      * Previous database connection (Before calling to onlyArchived)
      */
     public ?string $prevConnection = null;
 
+    protected $hasMakeConnChange = false;
+
     public function get($columns = ['*']):array| Collection
     {
-        
         $collection = parent::get($columns);
-        if(!$collection->isEmpty()){
-            if($this->fallbackToArchive || ($this->fallback && !$this->onArchive)){
+        if($collection->isEmpty()){
+            if($this->fallbackToArchive ||
+             (!$this->hasMakeConnChange && $this->fallbackRelation && !$this->onArchive)
+             ){
                 $this->onlyArchived();
                 $collection = parent::get($columns);
 
-            }elseif($this->fallback && $this->onArchive){
+            }elseif(!$this->hasMakeConnChange && $this->fallbackRelation && $this->onArchive){
                 $this->backToPreviousConnection($this);
                 $collection = parent::get($columns);
             }
         }
-        
         return $collection;
     }
 
@@ -56,11 +58,13 @@ class Builder extends EloquentBuilder
     {
         $exists = parent::exists();
         if(!$exists){
-            if($this->fallbackToArchive && ($this->fallback && !$this->onArchive)){
+            if($this->fallbackToArchive && 
+            (!$this->hasMakeConnChange && $this->fallbackRelation && !$this->onArchive)
+            ){
                 $this->onlyArchived();
                 $exists = parent::exists();
 
-            }elseif($this->fallback && $this->onArchive){
+            }elseif($this->fallbackRelation && $this->onArchive){
                 $this->backToPreviousConnection($this);
                 $exists = parent::exists();
             }
@@ -79,14 +83,14 @@ class Builder extends EloquentBuilder
             // If the relationship uses this builder, perpetuate the configuration defined at the base
             $relation->getQuery()->setPrevConnection($this->prevConnection);
             $relation->getQuery()->setOnArchive($this->onArchive);
-            if($this->fallback) $relation->getQuery()->fallback();
+            if($this->fallbackRelation) $relation->getQuery()->fallbackRelation();
         }
 
         return $relation;
     }
     
     /**
-     * Define if the selections must rexcute the query on the Database of archives if no match is found
+     * Re-execute the query on the Database of archives if no match is found
      */
     public function fallbackToArchive(): self
     {
@@ -97,8 +101,10 @@ class Builder extends EloquentBuilder
     /**
      * Change the query connection to set it to the archive database
      */
-    public function onlyArchived(): static
+    public function onlyArchived($first=true): static
     {
+        if (!$this->prevConnection)
+            $this->hasMakeConnChange = true;
         $this->putConnection($this->getModel()->getArchiveConnection(), $this);
         $this->setOnArchive(true);
         return $this;
@@ -107,8 +113,8 @@ class Builder extends EloquentBuilder
     /**
      * Set  the relationship recovery strategy
      */
-    public function fallback(){
-        $this->fallback = true;
+    public function fallbackRelation(){
+        $this->fallbackRelation = true;
     }
 
     /**
