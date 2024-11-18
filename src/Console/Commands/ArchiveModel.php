@@ -2,72 +2,79 @@
 
 namespace Lab2view\ModelArchive\Console\Commands;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Traits\Archivable;
+use Lab2view\ModelArchive\Traits\ReadArchive;
+use Lab2view\ModelArchive\Console\Commands\Base\Command;
 
-class ModelArchive extends Command
+class ArchiveModel extends Command
 {
-    protected $signature = 'lab2view:model_archive';
+    protected $signature = 'lab2view:archive-model';
 
     public $description = 'Archive all archivable models in the dedicated archives database.';
 
     public function handle(): int
     {
-        $models = $this->getArchivables();
-
-        if (count($models) === 0) {
+        $archivables = $this->getArchivables();
+        if ($archivables->isEmpty()) {
             $this->error('>> There are no achivable model.');
+
+            return self::FAILURE;
         }
 
-        foreach ($models as $model) {
+        foreach ($archivables as $archivable) {
+            $this->comment('>> Archive '.$archivable);
 
-            $archive_with = $model::$archive_with;
+            $instance = new $archivable;
+            $archiveWith = $instance->getArchiveWith();
+            $archiveConnection = $instance->getArchiveConnection();
 
-            /** @var \Illuminate\Database\Eloquent\Builder $query */
-            $query = $model::withoutGlobalScopes(array_key_exists(SoftDeletes::class, (new \ReflectionClass($model))->getTraits()) ? [SoftDeletes::class] : [])
-                ->select('*')
+            $archivablesQuery = $archivable::withoutGlobalScopes()
                 ->archivable()
-                ->with($archive_with);
+                ->select('*')
+                ->with($archiveWith);
 
-            foreach ($query->cursor() as $item) {
-                $archiveConnection = $model::$archiveConnection;
+            $bar = $this->output->createProgressBar($archivablesQuery->clone()->count());
+            $bar->start();
 
+            foreach ($archivablesQuery->cursor() as $model) {
                 DB::beginTransaction();
                 DB::connection($archiveConnection)->beginTransaction();
 
                 try {
-                    $this->archive($item, $archive_with, $archiveConnection);
-                    foreach ($archive_with as $relation) {
-                        if (! ($item->$relation() instanceof \Illuminate\Database\Eloquent\Relations\BelongsTo)) {
-                            $this->error('>> The relation '.$relation.' in '.$model.'.$archive_with is not instanceof BelongTo.');
-
+                    $this->archive($model, $archiveWith, $archiveConnection);
+                    foreach ($archiveWith as $relation) {
+                        $relationClass = $model->$relation();
+                        if (! ($relationClass instanceof BelongsTo)) {
+                            $this->comment(">> The relation $archivable -> $relation is not instanceof BelongTo. There are not archived");
                             continue;
                         }
-
-                        $relationValue = $item->$relation;
-
-                        if ($relationValue) {
-                            $this->archive($relationValue, [], $archiveConnection, false);
+                        if (! in_array(ReadArchive::class, class_uses_recursive($relationClass->getQuery()->getModel()::class))) {
+                            $this->error(">> The relation $archivable -> $relation model does not use ReadArchive trait.");
+                            return self::FAILURE;
+                        }
+                        $relation = $model->$relation;
+                        if ($relation) {
+                            $this->archive($relation, [], $archiveConnection, false);
                         }
                     }
-
                     DB::commit();
                     DB::connection($archiveConnection)->commit();
                 } catch (\Throwable $th) {
+                    $this->error($th->getMessage());
                     DB::rollBack();
                     DB::connection($archiveConnection)->rollBack();
                 }
+                $bar->advance();
             }
-            $this->comment('>> Archive of model '.$model.' done.');
+            $bar->finish();
+            $this->newLine();
         }
-
-        $this->comment('>> Archive of all models done.');
 
         return self::SUCCESS;
     }
@@ -75,37 +82,43 @@ class ModelArchive extends Command
     /**
      * Copy a model to the archive database
      *
+     * @param Archivable $model
      * @param  array<string>  $archiveWith
      */
     private function archive(Model $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
     {
-        $modelName = $model::class;
+        $modelName = get_class($model);
         $original = $model->getRawOriginal();
         $id = $original['id'];
-        $uniqueBy = [
-            'id' => $id,
-        ];
+        $uniqueBy = $model->getUniqueBy();
 
-        DB::connection($archiveConnection)->table($model->getTable())->upsert($original, $uniqueBy, $original);
+        DB::connection($archiveConnection)
+            ->table($model->getTable())
+            ->upsert(
+                $original,
+                $uniqueBy,
+                $original
+            );
 
         if ($commit) {
-            (new Archive([
+            Archive::create([
                 'archivable_id' => $id,
                 'archivable_type' => $modelName,
                 'archive_with' => $archiveWith,
-            ]))->save();
+            ]);
         }
     }
 
     /**
      * Get all archivable models.
+     *
+     * @return Collection<class-string<Archivable>>
      */
     private function getArchivables(): Collection
     {
         $models = collect(File::allFiles(app_path()))
             ->map(function ($item) {
                 $path = $item->getRelativePathName();
-
                 $class = sprintf('\%s%s',
                     app()->getNamespace(),
                     strtr(substr($path, 0, strrpos($path, '.')), '/', '\\'));
@@ -114,7 +127,6 @@ class ModelArchive extends Command
             })
             ->filter(function ($class) {
                 $valid = false;
-
                 if (class_exists($class)) {
                     $reflection = new \ReflectionClass($class);
                     $valid = ! $reflection->isAbstract() &&
