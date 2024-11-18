@@ -6,12 +6,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\File; 
 use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Traits\Archivable;
 use Lab2view\ModelArchive\Traits\ReadArchive;
-use Lab2view\ModelArchive\Console\Commands\Base\Command;
-
+use Lab2view\ModelArchive\Console\Commands\Base\Command; 
 class ArchiveModel extends Command
 {
     protected $signature = 'lab2view:archive-model';
@@ -99,13 +98,12 @@ class ArchiveModel extends Command
                 $uniqueBy,
                 $original
             );
-
+        
         if ($commit) {
-            Archive::create([
-                'archivable_id' => $id,
-                'archivable_type' => $modelName,
-                'archive_with' => $archiveWith,
-            ]);
+            $data = ['archivable_id' => $id, 'archivable_type' => $modelName, 'archive_with' => $archiveWith];
+            if(!Archive::where(['archivable_id' => $id, 'archivable_type' => $modelName])->exists()){
+                Archive::create($data);
+            }
         }
     }
 
