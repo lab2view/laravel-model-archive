@@ -36,40 +36,41 @@ class Builder extends EloquentBuilder
 
     protected $hasMakeConnChange = false;
 
-    public function get($columns = ['*']):array| Collection
+    public function get($columns = ['*']): array|Collection
     {
         $collection = parent::get($columns);
-        if($collection->isEmpty()){
-            if($this->fallbackToArchive ||
-             (!$this->hasMakeConnChange && $this->fallbackRelation && !$this->onArchive)
-             ){
+        if ($collection->isEmpty()) {
+            if ($this->fallbackToArchive ||
+             (! $this->hasMakeConnChange && $this->fallbackRelation && ! $this->onArchive)
+            ) {
                 $this->onlyArchived();
                 $collection = parent::get($columns);
 
-            }elseif(!$this->hasMakeConnChange && $this->fallbackRelation && $this->onArchive){
+            } elseif (! $this->hasMakeConnChange && $this->fallbackRelation && $this->onArchive) {
                 $this->backToPreviousConnection($this);
                 $collection = parent::get($columns);
             }
         }
+
         return $collection;
     }
 
     public function exists(): bool
     {
         $exists = parent::exists();
-        if(!$exists){
-            if($this->fallbackToArchive && 
-            (!$this->hasMakeConnChange && $this->fallbackRelation && !$this->onArchive)
-            ){
+        if (! $exists) {
+            if ($this->fallbackToArchive &&
+            (! $this->hasMakeConnChange && $this->fallbackRelation && ! $this->onArchive)
+            ) {
                 $this->onlyArchived();
                 $exists = parent::exists();
 
-            }elseif($this->fallbackRelation && $this->onArchive){
+            } elseif ($this->fallbackRelation && $this->onArchive) {
                 $this->backToPreviousConnection($this);
                 $exists = parent::exists();
             }
         }
-        
+
         return $exists;
     }
 
@@ -77,89 +78,99 @@ class Builder extends EloquentBuilder
     {
         $relation = parent::getRelation($name);
         // If the relationship does not use this builder, return to the previous connection
-        if($this->prevConnection && !$relation->getQuery() instanceof self){
+        if ($this->prevConnection && ! $relation->getQuery() instanceof self) {
             $this->backToPreviousConnection($relation->getQuery());
-        }elseif($this->prevConnection){
+        } elseif ($this->prevConnection) {
             // If the relationship uses this builder, perpetuate the configuration defined at the base
             $relation->getQuery()->setPrevConnection($this->prevConnection);
             $relation->getQuery()->setOnArchive($this->onArchive);
-            if($this->fallbackRelation) $relation->getQuery()->fallbackRelation();
+            if ($this->fallbackRelation) {
+                $relation->getQuery()->fallbackRelation();
+            }
         }
 
         return $relation;
     }
-    
+
     /**
      * Re-execute the query on the Database of archives if no match is found
      */
     public function fallbackToArchive(): self
     {
         $this->fallbackToArchive = true;
+
         return $this;
     }
 
     /**
      * Change the query connection to set it to the archive database
      */
-    public function onlyArchived($first=true): static
+    public function onlyArchived($first = true): static
     {
-        if (!$this->prevConnection)
+        if (! $this->prevConnection) {
             $this->hasMakeConnChange = true;
+        }
         $this->putConnection($this->getModel()->getArchiveConnection(), $this);
         $this->setOnArchive(true);
+
         return $this;
     }
 
     /**
      * Set  the relationship recovery strategy
      */
-    public function fallbackRelation(){
+    public function fallbackRelation()
+    {
         $this->fallbackRelation = true;
     }
 
     /**
      * Set if pending connection is archive connection
-     * @param bool $on
+     *
      * @return static
      */
-    public function setOnArchive(bool $on){
+    public function setOnArchive(bool $on)
+    {
         $this->onArchive = $on;
+
         return $this;
     }
 
     /**
      * Save previous connection
      */
-    public function setPrevConnection(string $conn){
+    public function setPrevConnection(string $conn)
+    {
         $this->prevConnection = $conn;
     }
 
     /**
      * Exit from the archive connection database and return to the previous database
-     * @param EloquentBuilder $builder
      */
-    private function backToPreviousConnection(EloquentBuilder $builder){
+    private function backToPreviousConnection(EloquentBuilder $builder)
+    {
         /**
          * @var string $prevConnection
          */
         $prevConnection = $this->prevConnection;
         $this->putConnection($prevConnection, $builder);
 
-        if($builder instanceof self){
+        if ($builder instanceof self) {
             $builder->setOnArchive(false);
         }
+
         return $this;
     }
 
     /**
      * Set a connection on a given Eloquent builder
      */
-    private function putConnection(string $conn, self | EloquentBuilder $builder): EloquentBuilder
+    private function putConnection(string $conn, self|EloquentBuilder $builder): EloquentBuilder
     {
         if ($builder instanceof self && $this->prevConnection) {
             $builder->setPrevConnection($this->prevConnection);
         }
-        if($builder instanceof self && !$builder->prevConnection){
+        if ($builder instanceof self && ! $builder->prevConnection) {
             $builder->setPrevConnection($this->getModel()->getConnection()->getName());
         }
 
