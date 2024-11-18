@@ -11,16 +11,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Command extends IlluminateCommand
 {
     /**
-     * List of collables to execute before commands
+     * List of callables to execute before commands
      *
-     * @var array<\collable>
+     * @var array<callable>
      */
     protected array $after = [];
 
     /**
-     * List of collables to execute after commands
+     * List of callables to execute after commands
      *
-     * @var array<\collable>
+     * @var array<callable>
      */
     protected array $before = [];
 
@@ -29,17 +29,19 @@ class Command extends IlluminateCommand
         parent::__construct();
 
         $between = Config::get('model-archive.between_commands');
+        if ($between) {
+            $this->before = array_merge(
+                $between[BetweenScriptStep::ALL->value],
+                $between[BetweenScriptStep::BEFORE->value][BetweenScriptStep::ALL->value],
+                $between[BetweenScriptStep::BEFORE->value][$this->signature]
+            );
+            $this->after = array_merge(
+                $between[BetweenScriptStep::ALL->value],
+                $between[BetweenScriptStep::AFTER->value][BetweenScriptStep::ALL->value],
+                $between[BetweenScriptStep::AFTER->value][$this->signature]
+            );
+        }
 
-        $this->before = array_merge(
-            $between[BetweenScriptStep::ALL->value],
-            $between[BetweenScriptStep::BEFORE->value][BetweenScriptStep::ALL->value],
-            $between[BetweenScriptStep::BEFORE->value][$this->signature]
-        );
-        $this->after = array_merge(
-            $between[BetweenScriptStep::ALL->value],
-            $between[BetweenScriptStep::AFTER->value][BetweenScriptStep::ALL->value],
-            $between[BetweenScriptStep::AFTER->value][$this->signature]
-        );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
