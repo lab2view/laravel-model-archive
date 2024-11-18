@@ -2,32 +2,21 @@
 
 namespace Lab2view\ModelArchive\Traits;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
+use Lab2view\ModelArchive\Eloquent\Builder;
 use Lab2view\ModelArchive\Models\Archive;
-use Lab2view\ModelArchive\Scopes\ArchivableScope;
 
+/**
+ * @template TModel of Model
+ * @mixin TModel
+ *
+ * class Archivable
+ *
+ */
 trait Archivable
 {
-    /**
-     * Database connection dedicated to archiving
-     */
-    public static $archiveConnection;
-
-    /**
-     * Boot the archivable trait for a model.
-     *
-     * @return void
-     */
-    public static function bootArchivable()
-    {
-        if (! self::$archiveConnection) {
-            self::$archiveConnection = Config::get('model-archive.archive_db_connection');
-        }
-
-        static::addGlobalScope(new ArchivableScope(self::$archiveConnection));
-    }
+    use ReadArchive;
 
     /**
      * Get the model's archive.
@@ -38,8 +27,10 @@ trait Archivable
     }
 
     /**
-     * @param  \Illuminate\Database\Eloquent\Builder<*>  $builder
-     * @return \Illuminate\Database\Eloquent\Builder<*>
+     * Scope request to customize the definition of archivable elements on a given archivable model
+     *
+     * @param  Builder<TModel>  $builder
+     * @return Builder<TModel>
      */
     public function scopeArchivable($builder)
     {
@@ -50,38 +41,32 @@ trait Archivable
      * Check that the archiving of a model has been carried out correctly.
      * Verifies by default that all the relations defined as having to be archived with the model that has been
      */
-    public function validateArchive(): bool
+    public function validateArchive(Archive $commit): bool
     {
-        $archive = $this->archive;
-
+        $archiveWith = $commit->archive_with;
+        /**
+         * @var array $selfWith
+         */
+        $selfWith = $this->with ?? [];
+        $withOnSelf = array_filter($archiveWith, fn ($w) => in_array($w, $selfWith));
+        /**
+         * @var static | null $archive
+         */
+        $archive = static::withoutGlobalScopes()
+            ->where($this->getUniqueBy())
+            ->onlyArchived()
+            ->with($withOnSelf)
+            ->first();
+            
         if ($archive) {
-            /** @var array<string> $archive_with */
-            $archiveWith = $archive->archive_with;
-
-            $archived = DB::connection(static::$archiveConnection)->table($this->getTable())->where('id', $this->id)->first();
-
-            if ($archived) {
-                foreach ($archiveWith as $with) {
-                    $sourceRelationship = $this->$with;
-
-                    if ($sourceRelationship) {
-                        $relationArchived = DB::connection(static::$archiveConnection)
-                            ->table($sourceRelationship->getTable())
-                            ->where('id', $sourceRelationship->id)
-                            ->exists();
-
-                        if (! $relationArchived) {
-                            return false;
-                        }
-                    }
-
+            foreach ($archiveWith as $relation) {
+                if ($this->$relation !== null && $archive->$relation == null) {
+                    return false;
                 }
-            } else {
-                return false;
             }
-
         }
 
         return true;
     }
+
 }
