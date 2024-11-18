@@ -19,8 +19,8 @@ class ModelArchiveServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             // Publish commands to archive archivable models and verify that archives is done successfully
             $this->commands([
-                \Lab2view\ModelArchive\Console\Commands\ModelArchive::class,
-                \Lab2view\ModelArchive\Console\Commands\ValidateModelArchive::class,
+                \Lab2view\ModelArchive\Console\Commands\ArchiveModel::class,
+                \Lab2view\ModelArchive\Console\Commands\ValidateArchiveModel::class,
             ]);
 
             // Publish config file
