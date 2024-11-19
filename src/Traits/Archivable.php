@@ -2,13 +2,13 @@
 
 namespace Lab2view\ModelArchive\Traits;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Lab2view\ModelArchive\Eloquent\Builder;
 use Lab2view\ModelArchive\Models\Archive;
+use Lab2view\ModelArchive\Models\ArchivableModel;
 
 /**
- * @template TModel of Model
+ * @template TModel of ArchivableModel
  *
  * @mixin TModel
  *
@@ -19,7 +19,7 @@ use Lab2view\ModelArchive\Models\Archive;
 trait Archivable
 {
     use ReadArchive;
-
+    
     /**
      * Get the model's archive.
      */
@@ -30,11 +30,9 @@ trait Archivable
 
     /**
      * Scope request to customize the definition of archivable elements on a given archivable model
-     *
-     * @param  Builder<TModel>  $builder
      * @return Builder<TModel>
      */
-    public function scopeArchivable($builder)
+    public function scopeArchivable(Builder $builder): Builder
     {
         return $builder;
     }
@@ -47,13 +45,13 @@ trait Archivable
     {
         $archiveWith = $commit->archive_with;
         /**
-         * @var array $selfWith
+         * @var array<int, string> $selfWith
          */
-        $selfWith = $this->with ?? [];
+        $selfWith = $this->with;
         $withOnSelf = array_filter($archiveWith, fn ($w) => in_array($w, $selfWith));
 
         /**
-         * @var static | null $archive
+         * @var self | null $selfArchiveClone
          */
         $selfArchiveClone = self::query()
             ->clone()
