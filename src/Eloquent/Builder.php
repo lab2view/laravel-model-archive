@@ -150,6 +150,8 @@ class Builder extends EloquentBuilder
     public function fallbackRelation()
     {
         $this->fallbackRelation = true;
+
+        return $this;
     }
 
     /**
@@ -170,6 +172,8 @@ class Builder extends EloquentBuilder
     public function setPrevConnection(string $conn)
     {
         $this->prevConnection = $conn;
+
+        return $this;
     }
 
     /**
