@@ -18,9 +18,9 @@ class ReadArchiveScope implements Scope
     /**
      * Set of extensions to read archives
      *
-     * @var array
+     * @var array<int, string>
      */
-    protected $extensions = ['Validated', 'CreatedBefore', 'CreatedAfter', 'Archived'];
+    protected array $extensions = ['Validated', 'CreatedBefore', 'CreatedAfter', 'Archived'];
 
     public function apply(Builder $builder, Model $model) {}
 

@@ -4,42 +4,48 @@ namespace Lab2view\ModelArchive\Eloquent;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Lab2view\ModelArchive\Traits\ReadArchive;
 
 /**
- * @template TModel of ReadArchive
+ * @template TModel of Model
  * Class Builder
  *
  * @extends EloquentBuilder<TModel>
  */
 class Builder extends EloquentBuilder
 {
-    /**
+   /**
      * Deletermine if the selections must execute the query only on the Database of archives
      */
-    protected bool $onArchive = false;
+    private bool $onArchive = false;
 
     /**
      * Deletermine if the selections must rexecute the query on the Database of archives if no match is found
      */
-    protected bool $fallbackToArchive = false;
+    private bool $fallbackToArchive = false;
 
     /**
      * Determine the relationship recovery strategy. Defunct whether to search for the element on the previous connection if it is not found
      */
-    protected bool $fallbackRelation = false;
+    private bool $fallbackRelation = false;
 
     /**
      * Previous database connection (Before calling to onlyArchived)
      */
-    public ?string $prevConnection = null;
+    private ?string $prevConnection = null;
 
     /**
      * Determines whether the builder is responsible for the original connection switch to the archives and not a relationship, nested or not
      */
     protected bool $isOriginalSwitching = false;
 
-    public function get($columns = ['*']): array|Collection
+    /**
+     * Execute the query as a "select" statement. Allows to switch database connection if the element is not found and re-execute the query
+     * @param mixed $columns
+     * @return static[]|Collection<TModel>
+     */
+    public function get($columns = ['*'])
     {
         $collection = parent::get($columns);
         if ($collection->isEmpty()) {
@@ -88,7 +94,11 @@ class Builder extends EloquentBuilder
                 // Back to previous connection
                 $this->backToPreviousConnection($relation->getQuery());
             } else {
-                $archiveWith = $this->getModel()->getArchiveWith();
+                /**
+                 * @var mixed
+                 */
+                $model = $this->getModel();
+                $archiveWith = $model->getArchiveWith();
                 // If the relationship is defined as being archives and we are already on the archives,
                 // maintain the connection of the relationship in the archives and perpetuate the base
                 // configuration (fallbackRelation, previous connection ...)
@@ -123,7 +133,7 @@ class Builder extends EloquentBuilder
     /**
      * Re-execute the query on the Database of archives if no match is found
      */
-    public function fallbackToArchive(): self
+    public function fallbackToArchive(): static
     {
         $this->fallbackToArchive = true;
 
@@ -138,7 +148,11 @@ class Builder extends EloquentBuilder
         if (! $this->prevConnection) {
             $this->isOriginalSwitching = true;
         }
-        $this->putConnection($this, $this->getModel()->getArchiveConnection());
+        /**
+         * @var mixed
+         */
+        $model = $this->getModel();
+        $this->putConnection($this, $model->getArchiveConnection());
         $this->setOnArchive(true);
 
         return $this;
@@ -147,7 +161,7 @@ class Builder extends EloquentBuilder
     /**
      * Set  the relationship recovery strategy
      */
-    public function fallbackRelation()
+    public function fallbackRelation(): static
     {
         $this->fallbackRelation = true;
 
@@ -159,7 +173,7 @@ class Builder extends EloquentBuilder
      *
      * @return static
      */
-    public function setOnArchive(bool $on)
+    public function setOnArchive(bool $on): static
     {
         $this->onArchive = $on;
 
@@ -169,7 +183,7 @@ class Builder extends EloquentBuilder
     /**
      * Save previous connection
      */
-    public function setPrevConnection(string $conn)
+    public function setPrevConnection(string $conn): static
     {
         $this->prevConnection = $conn;
 
@@ -178,14 +192,15 @@ class Builder extends EloquentBuilder
 
     /**
      * Exit from the archive connection database and return to the previous database
+     * @return static
      */
-    private function backToPreviousConnection(EloquentBuilder $builder)
+     private function backToPreviousConnection(EloquentBuilder $builder): static
     {
         $this->putConnection(builder: $builder);
 
         if ($builder instanceof self) {
             $builder->setOnArchive(false);
-        }
+        } 
 
         return $this;
     }
@@ -196,10 +211,18 @@ class Builder extends EloquentBuilder
     private function putConnection(self|EloquentBuilder $builder, ?string $c = null): EloquentBuilder
     {
         if (! $this->prevConnection) {
-            $this->setPrevConnection($this->getModel()->getConnection()->getName());
+            /**
+             * @var string
+             */
+            $connection = $this->getModel()->getConnection()->getName();
+            $this->setPrevConnection($connection);
         }
         if ($builder instanceof self) {
-            $builder->setPrevConnection($this->prevConnection);
+            /**
+             * @var string
+             */
+            $connection = $this->prevConnection;
+            $builder->setPrevConnection($connection);
         }
         if (! $c) {
             $c = $this->prevConnection;

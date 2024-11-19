@@ -56,8 +56,8 @@ class Archive extends Model
     /**
      * Scope request to retrieve archives that have not yet been validated
      *
-     * @param  Builder<Archivable>  $query
-     * @return Builder<Archivable>
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopeUnvalidated(Builder $query): Builder
     {
