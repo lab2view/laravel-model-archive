@@ -2,12 +2,16 @@
 
 namespace Lab2view\ModelArchive\Traits;
 
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
-use Lab2view\ModelArchive\Eloquent\Builder;
+use Lab2view\ModelArchive\Eloquent\Builder as ArchiveBuilder;
 use Lab2view\ModelArchive\Scopes\ReadArchiveScope;
 
 /**
+ * @template TModel of Model
+ *
  * @mixin Model
  *
  * class ReadArchive
@@ -42,16 +46,29 @@ trait ReadArchive
         }
     }
 
-    public function newEloquentBuilder($builder): Builder
+    /**
+     * Get a new query builder that doesn't have any global scopes or eager loading.
+     * @param  QueryBuilder  $builder
+     * @return EloquentBuilder<TModel>
+     */
+    public function newEloquentBuilder(QueryBuilder $builder): ArchiveBuilder
     {
-        return new Builder($builder);
+        return new ArchiveBuilder($builder);
     }
 
+    /**
+     * Get relations archived with model
+     * @return array<int, string>
+     */
     public function getArchiveWith(): array
     {
         return $this->archiveWith ?? [];
     }
 
+    /**
+     * Get data that makes the model unique
+     * @return array<string, mixed>
+     */
     public function getUniqueBy(): array
     {
         $uniqueBy = [];
