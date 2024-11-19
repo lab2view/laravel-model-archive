@@ -11,16 +11,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Command extends IlluminateCommand
 {
     /**
-     * List of collables to execute before commands
+     * List of callables to execute before commands
      *
-     * @var array<\collable>
+     * @var array<callable>
      */
     protected array $after = [];
 
     /**
-     * List of collables to execute after commands
+     * List of callables to execute after commands
      *
-     * @var array<\collable>
+     * @var array<callable>
      */
     protected array $before = [];
 
