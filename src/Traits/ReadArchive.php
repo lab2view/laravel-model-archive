@@ -23,7 +23,7 @@ trait ReadArchive
     /**
      * Retrieve the model's archive connection
      */
-    public function getArchiveConnection(): string
+    public function getArchiveConnection(): ?string
     {
         return Config::get('model-archive.archive_db_connection');
     }
