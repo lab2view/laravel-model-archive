@@ -3,8 +3,8 @@
 namespace Lab2view\ModelArchive\Traits;
 
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Config;
 use Lab2view\ModelArchive\Eloquent\Builder as ArchiveBuilder;
 use Lab2view\ModelArchive\Scopes\ReadArchiveScope;
@@ -48,7 +48,7 @@ trait ReadArchive
 
     /**
      * Get a new query builder that doesn't have any global scopes or eager loading.
-     * @param  QueryBuilder  $builder
+     *
      * @return EloquentBuilder<TModel>
      */
     public function newEloquentBuilder(QueryBuilder $builder): ArchiveBuilder
@@ -58,6 +58,7 @@ trait ReadArchive
 
     /**
      * Get relations archived with model
+     *
      * @return array<int, string>
      */
     public function getArchiveWith(): array
@@ -67,6 +68,7 @@ trait ReadArchive
 
     /**
      * Get data that makes the model unique
+     *
      * @return array<string, mixed>
      */
     public function getUniqueBy(): array

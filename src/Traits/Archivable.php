@@ -13,6 +13,8 @@ use Lab2view\ModelArchive\Models\Archive;
  * @mixin TModel
  *
  * class Archivable
+ *
+ * @use ReadArchive<TModel>
  */
 trait Archivable
 {
@@ -53,7 +55,7 @@ trait Archivable
         /**
          * @var static | null $archive
          */
-        $archive = self::query()
+        $selfArchiveClone = self::query()
             ->clone()
             ->withoutGlobalScopes()
             ->where($this->getUniqueBy())
@@ -61,9 +63,9 @@ trait Archivable
             ->with($withOnSelf)
             ->first();
 
-        if ($archive) {
+        if ($selfArchiveClone) {
             foreach ($archiveWith as $relation) {
-                if ($this->$relation !== null && $archive->$relation == null) {
+                if ($this->$relation !== null && $selfArchiveClone->$relation == null) {
                     return false;
                 }
             }

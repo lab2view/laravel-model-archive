@@ -2,9 +2,9 @@
 
 namespace Lab2view\ModelArchive\Console\Commands;
 
-use Illuminate\Database\Eloquent\SoftDeletes; 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
-use Lab2view\ModelArchive\Models\Archive; 
+use Lab2view\ModelArchive\Models\Archive;
 
 class ValidateArchiveModel extends Command
 {
@@ -24,7 +24,8 @@ class ValidateArchiveModel extends Command
                 ->with($archive->archive_with ?? [])
                 ->select('*')
                 ->first();
-            if ($source && $source->validateArchive($commit)) { 
+
+            if ($source && $source->validateArchive($commit)) {
                 $commit->validated_at = now();
                 $commit->save();
 
