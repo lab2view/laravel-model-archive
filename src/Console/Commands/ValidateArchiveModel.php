@@ -21,7 +21,7 @@ class ValidateArchiveModel extends Command
         foreach ($unvalidatedCommitsQuery->cursor() as $commit) {
             $source = $commit->archivable_type::withoutGlobalScopes(class_uses($commit->archivable_type))
                 ->where('id', $commit->archivable_id)
-                ->with($archive->archive_with ?? [])
+                ->with($commit->archive_with ?? [])
                 ->select('*')
                 ->first();
 
