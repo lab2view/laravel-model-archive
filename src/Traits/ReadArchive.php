@@ -2,9 +2,7 @@
 
 namespace Lab2view\ModelArchive\Traits;
 
-use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Facades\Config;
 use Lab2view\ModelArchive\Eloquent\Builder as ArchiveBuilder;
 use Lab2view\ModelArchive\Scopes\ReadArchiveScope;
@@ -47,11 +45,11 @@ trait ReadArchive
     }
 
     /**
-     * Get a new query builder that doesn't have any global scopes or eager loading.
+     * Create a new Eloquent query builder for the model.
      *
-     * @return EloquentBuilder<TModel>
+     * @return ArchiveBuilder<TModel>
      */
-    public function newEloquentBuilder(QueryBuilder $builder): ArchiveBuilder
+    public function newEloquentBuilder($builder)
     {
         return new ArchiveBuilder($builder);
     }
