@@ -9,7 +9,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
+use Lab2view\ModelArchive\Eloquent\Builder;
 use Lab2view\ModelArchive\Models\Archive;
+use Lab2view\ModelArchive\Models\ArchivableModel;
+use Lab2view\ModelArchive\Models\ReadArchiveModel;
 use Lab2view\ModelArchive\Traits\Archivable;
 use Lab2view\ModelArchive\Traits\ReadArchive;
 
@@ -33,8 +36,14 @@ class ArchiveModel extends Command
 
             $instance = new $archivable;
             $archiveWith = $instance->getArchiveWith();
+            /**
+             * @var string
+             */
             $archiveConnection = $instance->getArchiveConnection();
 
+            /**
+             * @var Builder<ReadArchiveModel>
+             */
             $archivablesQuery = $archivable::withoutGlobalScopes(class_uses_recursive($archivable))
                 ->archivable()
                 ->select('*')
@@ -91,10 +100,9 @@ class ArchiveModel extends Command
     /**
      * Copy a model to the archive database
      *
-     * @param  Archivable  $model
      * @param  array<string>  $archiveWith
      */
-    private function archive(Model $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
+    private function archive(ReadArchiveModel $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
     {
         $modelName = get_class($model);
         $original = $model->getRawOriginal();
@@ -120,7 +128,7 @@ class ArchiveModel extends Command
     /**
      * Get all archivable models.
      *
-     * @return Collection<class-string<Archivable>>
+     * @return Collection<int, class-string<ArchivableModel>>
      */
     private function getArchivables(): Collection
     {
@@ -129,6 +137,7 @@ class ArchiveModel extends Command
                 $path = $item->getRelativePathName();
                 $class = sprintf('\%s%s',
                     app()->getNamespace(),
+                    /** @phpstan-ignore-next-line */
                     strtr(substr($path, 0, strrpos($path, '.')), '/', '\\'));
 
                 return $class;
@@ -138,13 +147,17 @@ class ArchiveModel extends Command
                 if (class_exists($class)) {
                     $reflection = new \ReflectionClass($class);
                     $valid = ! $reflection->isAbstract() &&
-                            $reflection->isSubclassOf(Model::class) &&
-                            array_key_exists(Archivable::class, $reflection->getTraits());
+                            $reflection->isSubclassOf(Model::class) &&  
+                            (in_array(Archivable::class, class_uses_recursive($class)));
                 }
 
                 return $valid;
             });
+        /**
+         * @var Collection<int, class-string<ArchivableModel>>
+         */
+        $values = $models->values();
 
-        return $models->values();
+        return $values;
     }
 }

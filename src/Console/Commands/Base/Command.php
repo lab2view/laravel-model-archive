@@ -56,9 +56,10 @@ class Command extends IlluminateCommand
     /**
      * Execute collables before or after commmand
      */
-    public function execute_between_scripts(BetweenScriptStep $step)
+    public function execute_between_scripts(BetweenScriptStep $step): void
     {
         $step_value = $step->value;
+        /** @phpstan-ignore-next-line */
         foreach ($this->$step_value as $collable) {
             call_user_func($collable);
         }

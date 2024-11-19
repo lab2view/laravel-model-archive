@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Lab2view\ModelArchive\Eloquent\Builder as ArchiveBuilder;
 use Lab2view\ModelArchive\Scopes\ReadArchiveScope;
+use Lab2view\ModelArchive\Models\ReadArchiveModel;
 
 /**
- * @template TModel of Model
+ * @template TModel of ReadArchiveModel
  *
  * @mixin Model
  *
@@ -31,8 +32,9 @@ trait ReadArchive
     /**
      * Boot the ReadArchive trait for a model.
      */
-    public static function bootReadArchive()
+    public static function bootReadArchive(): void
     {
+        /** @phpstan-ignore-next-line */
         $instance = new static;
         if ($instance->getArchiveConnection()) {
             static::addGlobalScope(
@@ -46,10 +48,8 @@ trait ReadArchive
 
     /**
      * Create a new Eloquent query builder for the model.
-     *
-     * @return ArchiveBuilder<TModel>
      */
-    public function newEloquentBuilder($builder)
+    public function newEloquentBuilder($builder): ArchiveBuilder
     {
         return new ArchiveBuilder($builder);
     }

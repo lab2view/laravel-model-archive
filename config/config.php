@@ -8,13 +8,13 @@ return [
         'all' => [],
         'before' => [
             'all' => [],
-            'lab2view:model_archive' => [],
-            'lab2view:validate_model_archive' => [],
+            'lab2view:archive-model' => [],
+            'lab2view:validate-archive-model' => [],
         ],
         'after' => [
             'all' => [],
-            'lab2view:model_archive' => [],
-            'lab2view:validate_model_archive' => [],
+            'lab2view:archive-model' => [],
+            'lab2view:validate-archive-model' => [],
         ],
     ],
 ];

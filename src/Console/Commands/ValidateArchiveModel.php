@@ -5,6 +5,7 @@ namespace Lab2view\ModelArchive\Console\Commands;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Models\Archive;
+use Lab2view\ModelArchive\Models\ArchivableModel;
 
 class ValidateArchiveModel extends Command
 {
@@ -19,9 +20,12 @@ class ValidateArchiveModel extends Command
         $bar = $this->output->createProgressBar($unvalidatedCommitsQuery->clone()->count());
         $bar->start();
         foreach ($unvalidatedCommitsQuery->cursor() as $commit) {
+            /**
+             * @var ArchivableModel | null
+             */
             $source = $commit->archivable_type::withoutGlobalScopes(class_uses($commit->archivable_type))
                 ->where('id', $commit->archivable_id)
-                ->with($archive->archive_with ?? [])
+                ->with($commit->archive_with ?? [])
                 ->select('*')
                 ->first();
 
