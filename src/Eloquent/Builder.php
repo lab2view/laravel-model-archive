@@ -195,11 +195,15 @@ class Builder extends EloquentBuilder
      */
     private function putConnection(self|EloquentBuilder $builder, ?string $c = null): EloquentBuilder
     {
+        
         if (! $this->prevConnection) {
             $this->setPrevConnection($this->getModel()->getConnection()->getName());
         }
         if ($builder instanceof self) {
             $builder->setPrevConnection($this->prevConnection);
+        }
+        if(!$c){
+            $c = $this->prevConnection;
         }
         // Set the connection on the underlying model instance so that generated
         // Relationships/pivots use the same connection
