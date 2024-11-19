@@ -34,19 +34,22 @@ class Builder extends EloquentBuilder
      */
     public ?string $prevConnection = null;
 
-    protected $hasMakeConnChange = false;
+    /**
+     * Determines whether the builder is responsible for the original connection switch to the archives and not a relationship, nested or not
+     */
+    protected bool $isOriginalSwitching = false;
 
     public function get($columns = ['*']): array|Collection
     {
         $collection = parent::get($columns);
         if ($collection->isEmpty()) {
             if ($this->fallbackToArchive ||
-             (! $this->hasMakeConnChange && $this->fallbackRelation && ! $this->onArchive)
+             (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive)
             ) {
                 $this->onlyArchived();
                 $collection = parent::get($columns);
 
-            } elseif (! $this->hasMakeConnChange && $this->fallbackRelation && $this->onArchive) {
+            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive) {
                 $this->backToPreviousConnection($this);
                 $collection = parent::get($columns);
             }
@@ -60,7 +63,7 @@ class Builder extends EloquentBuilder
         $exists = parent::exists();
         if (! $exists) {
             if ($this->fallbackToArchive &&
-            (! $this->hasMakeConnChange && $this->fallbackRelation && ! $this->onArchive)
+            (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive)
             ) {
                 $this->onlyArchived();
                 $exists = parent::exists();
@@ -77,15 +80,40 @@ class Builder extends EloquentBuilder
     public function getRelation($name)
     {
         $relation = parent::getRelation($name);
-        // If the relationship does not use this builder, return to the previous connection
-        if ($this->prevConnection && ! $relation->getQuery() instanceof self) {
-            $this->backToPreviousConnection($relation->getQuery());
-        } elseif ($this->prevConnection) {
-            // If the relationship uses this builder, perpetuate the configuration defined at the base
-            $relation->getQuery()->setPrevConnection($this->prevConnection);
-            $relation->getQuery()->setOnArchive($this->onArchive);
-            if ($this->fallbackRelation) {
-                $relation->getQuery()->fallbackRelation();
+        // When a connection change has been made to the archive.
+        // Whether we are still there or not (fallbackRelation strategy).
+        if ($this->prevConnection) {
+            // If the relationship does not use this eloquent builder, go back to the previous connection and stay there permanently.
+            if (! $relation->getQuery() instanceof self) {
+                // Back to previous connection
+                $this->backToPreviousConnection($relation->getQuery());
+            } else {
+                $archiveWith = $this->getModel()->getArchiveWith();
+                // If the relationship is defined as being archives and we are already on the archives,
+                // maintain the connection of the relationship in the archives and perpetuate the base
+                // configuration (fallbackRelation, previous connection ...)
+                if (in_array($name, $archiveWith) && $this->onArchive) {
+                    // Stay on archives
+                    $relation->getQuery()->onlyArchived();
+                    // Perpetuate
+                    $this->fallbackRelation && $relation->getQuery()->fallbackRelation();
+                }
+                // If the relationship is defined as archives and we are on the previous connection,
+                // change the relationship connection in the archives and perpetuate the base configuration (fallbackRelation, previous connection...)
+                if (in_array($name, $archiveWith) && ! $this->onArchive) {
+                    // Go to archives
+                    $relation->getQuery()->onlyArchived();
+                    // Perpetuate
+                    $this->fallbackRelation && $relation->getQuery()->fallbackRelation();
+                }
+                // If the relationship is not defined as being archived, redefine the connection of the relationship
+                // on the previous database while preserving the configuration defined at the base (fallback relationship, prevConnection, ...)
+                if (! in_array($name, $archiveWith)) {
+                    // Back to previous connection
+                    $this->backToPreviousConnection($relation->getQuery());
+                    // Perpetuate
+                    $this->fallbackRelation && $relation->getQuery()->fallbackRelation();
+                }
             }
         }
 
@@ -105,12 +133,12 @@ class Builder extends EloquentBuilder
     /**
      * Change the query connection to set it to the archive database
      */
-    public function onlyArchived($first = true): static
+    public function onlyArchived(): static
     {
         if (! $this->prevConnection) {
-            $this->hasMakeConnChange = true;
+            $this->isOriginalSwitching = true;
         }
-        $this->putConnection($this->getModel()->getArchiveConnection(), $this);
+        $this->putConnection($this, $this->getModel()->getArchiveConnection());
         $this->setOnArchive(true);
 
         return $this;
@@ -149,11 +177,7 @@ class Builder extends EloquentBuilder
      */
     private function backToPreviousConnection(EloquentBuilder $builder)
     {
-        /**
-         * @var string $prevConnection
-         */
-        $prevConnection = $this->prevConnection;
-        $this->putConnection($prevConnection, $builder);
+        $this->putConnection(builder: $builder);
 
         if ($builder instanceof self) {
             $builder->setOnArchive(false);
@@ -165,25 +189,24 @@ class Builder extends EloquentBuilder
     /**
      * Set a connection on a given Eloquent builder
      */
-    private function putConnection(string $conn, self|EloquentBuilder $builder): EloquentBuilder
+    private function putConnection(self|EloquentBuilder $builder, ?string $c = null): EloquentBuilder
     {
-        if ($builder instanceof self && $this->prevConnection) {
+        if (! $this->prevConnection) {
+            $this->setPrevConnection($this->getModel()->getConnection()->getName());
+        }
+        if ($builder instanceof self) {
             $builder->setPrevConnection($this->prevConnection);
         }
-        if ($builder instanceof self && ! $builder->prevConnection) {
-            $builder->setPrevConnection($this->getModel()->getConnection()->getName());
-        }
-
         // Set the connection on the underlying model instance so that generated
         // Relationships/pivots use the same connection
-        $builder->getModel()->setConnection($conn);
-        $conn = $builder->getModel()->getConnection();
+        $builder->getModel()->setConnection($c);
+        $connection = $builder->getModel()->getConnection();
 
         // Set the same connection on the query builder
         $query = $builder->getQuery();
-        $query->connection = $conn;
-        $query->grammar = $conn->query()->getGrammar();
-        $query->processor = $conn->query()->getProcessor();
+        $query->connection = $connection;
+        $query->grammar = $connection->query()->getGrammar();
+        $query->processor = $connection->query()->getProcessor();
 
         $builder->setQuery($query);
 
