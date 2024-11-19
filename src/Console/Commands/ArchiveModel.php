@@ -4,6 +4,7 @@ namespace Lab2view\ModelArchive\Console\Commands;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -50,8 +51,14 @@ class ArchiveModel extends Command
                     $this->archive($model, $archiveWith, $archiveConnection);
                     foreach ($archiveWith as $relation) {
                         $relationClass = $model->$relation();
-                        if (! ($relationClass instanceof BelongsTo)) {
-                            $this->comment(">> The relation $archivable -> $relation is not instanceof BelongTo. There are not archived");
+                        if (! ($relationClass instanceof BelongsTo || $relationClass instanceof HasOne)) {
+                            $this->comment(
+                                <<<EOF
+                                    >> The relation $archivable->$relation is not instanceof BelongTo or HasOne. 
+                                    There are not archived. 
+                                    Make sure to archive it manually if necessary.
+                                EOF
+                            );
 
                             continue;
                         }
@@ -91,8 +98,7 @@ class ArchiveModel extends Command
     {
         $modelName = get_class($model);
         $original = $model->getRawOriginal();
-        $id = $original['id'];
-        $uniqueBy = $model->getUniqueBy();
+        $uniqueBy = $model->getUniqBy();
 
         DB::connection($archiveConnection)
             ->table($model->getTable())
@@ -103,6 +109,7 @@ class ArchiveModel extends Command
             );
 
         if ($commit) {
+            $id = $original['id'];
             $data = ['archivable_id' => $id, 'archivable_type' => $modelName, 'archive_with' => $archiveWith];
             if (! Archive::where(['archivable_id' => $id, 'archivable_type' => $modelName])->exists()) {
                 Archive::create($data);
