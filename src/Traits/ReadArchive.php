@@ -69,7 +69,7 @@ trait ReadArchive
      *
      * @return array<string, mixed>
      */
-    public function getUniqueBy(): array
+    public function getUniqBy(): array
     {
         $uniqueBy = [];
         foreach ($this->uniqueBy ?? ['id' => 'id'] as $field => $value) {

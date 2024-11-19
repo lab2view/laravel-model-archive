@@ -58,7 +58,7 @@ trait Archivable
         $selfArchiveClone = self::query()
             ->clone()
             ->withoutGlobalScopes()
-            ->where($this->getUniqueBy())
+            ->where($this->getUniqBy())
             ->onlyArchived()
             ->with($withOnSelf)
             ->first();
