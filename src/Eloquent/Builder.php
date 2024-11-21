@@ -18,27 +18,27 @@ class Builder extends EloquentBuilder
     /**
      * Deletermine if the selections must execute the query only on the Database of archives
      */
-    protected bool $onArchive = false;
+    private bool $onArchive = false;
 
     /**
      * Deletermine if the selections must rexecute the query on the Database of archives if no match is found
      */
-    protected bool $fallbackToArchive = false;
+    private bool $fallbackToArchive = false;
 
     /**
      * Determine the relationship recovery strategy. Defunct whether to search for the element on the previous connection if it is not found
      */
-    protected bool $fallbackRelation = false;
+    private bool $fallbackRelation = false;
 
     /**
      * Previous database connection (Before calling to onlyArchived)
      */
-    public ?string $prevConnection = null;
+    private ?string $prevConnection = null;
 
     /**
      * Determines whether the builder is responsible for the original connection switch to the archives and not a relationship, nested or not
      */
-    protected bool $isOriginalSwitching = false;
+    private bool $isOriginalSwitching = false;
 
     /**
      * @param  mixed  $columns
