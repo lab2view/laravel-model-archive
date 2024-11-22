@@ -4,8 +4,8 @@ namespace Lab2view\ModelArchive\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Lab2view\ModelArchive\Eloquent\Builder;
-use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Models\ArchivableModel;
+use Lab2view\ModelArchive\Models\Archive;
 
 /**
  * @template TModel of ArchivableModel
@@ -19,7 +19,7 @@ use Lab2view\ModelArchive\Models\ArchivableModel;
 trait Archivable
 {
     use ReadArchive;
-    
+
     /**
      * Get the model's archive.
      */
@@ -30,6 +30,7 @@ trait Archivable
 
     /**
      * Scope request to customize the definition of archivable elements on a given archivable model
+     *
      * @return Builder<TModel>
      */
     public function scopeArchivable(Builder $builder): Builder

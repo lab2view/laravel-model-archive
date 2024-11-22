@@ -5,8 +5,8 @@ namespace Lab2view\ModelArchive\Traits;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Lab2view\ModelArchive\Eloquent\Builder as ArchiveBuilder;
-use Lab2view\ModelArchive\Scopes\ReadArchiveScope;
 use Lab2view\ModelArchive\Models\ReadArchiveModel;
+use Lab2view\ModelArchive\Scopes\ReadArchiveScope;
 
 /**
  * @template TModel of ReadArchiveModel
