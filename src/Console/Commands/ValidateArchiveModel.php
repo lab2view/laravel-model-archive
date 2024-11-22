@@ -4,8 +4,8 @@ namespace Lab2view\ModelArchive\Console\Commands;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
-use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Models\ArchivableModel;
+use Lab2view\ModelArchive\Models\Archive;
 
 class ValidateArchiveModel extends Command
 {
