@@ -16,29 +16,24 @@ use Lab2view\ModelArchive\Models\ReadArchiveModel;
 class Builder extends EloquentBuilder
 {
     /**
-     * Deletermine if the selections must execute the query only on the Database of archives
+     * Determine if any of the methods to use archives (fallbackToArchive, onlyArchive, fallbackRelation) were called
      */
-    protected bool $onArchive = false;
+    public bool $useArchive = false;
 
     /**
-     * Deletermine if the selections must rexecute the query on the Database of archives if no match is found
+     * Determine if the selections must rexecute the query on the Database of archives if no match is found
      */
-    protected bool $fallbackToArchive = false;
+    private bool $fallbackToArchive = false;
 
     /**
-     * Determine the relationship recovery strategy. Defunct whether to search for the element on the previous connection if it is not found
+     * Determine the recovery strategy for the relation. Defines whether to look for the element on the second connection if it is not found
      */
-    protected bool $fallbackRelation = false;
+    private bool $fallbackRelation = false;
 
     /**
-     * Previous database connection (Before calling to onlyArchived)
+     * Determine if the builder originally defined the ability to fall back to archives
      */
-    public ?string $prevConnection = null;
-
-    /**
-     * Determines whether the builder is responsible for the original connection switch to the archives and not a relationship, nested or not
-     */
-    protected bool $isOriginalSwitching = false;
+    private bool $isOriginalSwitching = false;
 
     /**
      * @param  mixed  $columns
@@ -47,15 +42,15 @@ class Builder extends EloquentBuilder
     public function get($columns = ['*']): array|Collection
     {
         $collection = parent::get($columns);
-        if ($collection->isEmpty()) {
-            if ($this->fallbackToArchive ||
-             (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive)
+        if ($collection->isEmpty() && $this->useArchive) {
+            if (
+                $this->fallbackToArchive ||
+                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
-                $this->onlyArchived();
+                $this->fallbackToOnlyArchive();
                 $collection = parent::get($columns);
-
-            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive) {
-                $this->backToPreviousConnection($this);
+            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
+                $this->fallbackToMainConnection($this);
                 $collection = parent::get($columns);
             }
         }
@@ -66,15 +61,15 @@ class Builder extends EloquentBuilder
     public function exists(): bool
     {
         $exists = parent::exists();
-        if (! $exists) {
-            if ($this->fallbackToArchive &&
-            (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive)
+        if (! $exists && $this->useArchive) {
+            if (
+                $this->fallbackToArchive ||
+                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
-                $this->onlyArchived();
+                $this->fallbackToOnlyArchive();
                 $exists = parent::exists();
-
-            } elseif ($this->fallbackRelation && $this->onArchive) {
-                $this->backToPreviousConnection($this);
+            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
+                $this->fallbackToMainConnection($this);
                 $exists = parent::exists();
             }
         }
@@ -87,42 +82,46 @@ class Builder extends EloquentBuilder
         $relation = parent::getRelation($name);
         // When a connection change has been made to the archive.
         // Whether we are still there or not (fallbackRelation strategy).
-        if ($this->prevConnection) {
+        if ($this->useArchive) {
             // If the relationship does not use this eloquent builder, go back to the previous connection and stay there permanently.
             if (! $relation->getQuery() instanceof self) {
                 // Back to previous connection
-                $this->backToPreviousConnection($relation->getQuery());
+                $this->fallbackToMainConnection($relation->getQuery());
             } else {
+                // perpetuate the base configuration (fallbackRelation, previous connection ...)
+                $this->fallbackRelation && $relation->getQuery()->fallbackRelation();
+
                 $archiveWith = $this->getModel()->getArchiveWith();
                 // If the relationship is defined as being archives and we are already on the archives,
-                // maintain the connection of the relationship in the archives and perpetuate the base
-                // configuration (fallbackRelation, previous connection ...)
-                if (in_array($name, $archiveWith) && $this->onArchive) {
+                // maintain the connection of the relationship in the archives
+                if (in_array($name, $archiveWith) && $this->onArchive()) {
                     // Stay on archives
-                    $relation->getQuery()->onlyArchived();
-                    // Perpetuate
-                    $this->fallbackRelation && $relation->getQuery()->fallbackRelation();
+                    $relation->getQuery()->fallbackToOnlyArchive();
                 }
                 // If the relationship is defined as archives and we are on the previous connection,
-                // change the relationship connection in the archives and perpetuate the base configuration (fallbackRelation, previous connection...)
-                if (in_array($name, $archiveWith) && ! $this->onArchive) {
+                // change the relationship connection in the archives
+                if (in_array($name, $archiveWith) && ! $this->onArchive()) {
                     // Go to archives
-                    $relation->getQuery()->onlyArchived();
-                    // Perpetuate
-                    $this->fallbackRelation && $relation->getQuery()->fallbackRelation();
+                    $relation->getQuery()->fallbackToOnlyArchive();
                 }
                 // If the relationship is not defined as being archived, redefine the connection of the relationship
-                // on the previous database while preserving the configuration defined at the base (fallback relationship, prevConnection, ...)
+                // on the previous database
                 if (! in_array($name, $archiveWith)) {
                     // Back to previous connection
-                    $this->backToPreviousConnection($relation->getQuery());
-                    // Perpetuate
-                    $this->fallbackRelation && $relation->getQuery()->fallbackRelation();
+                    $this->fallbackToMainConnection($relation->getQuery());
                 }
             }
         }
 
         return $relation;
+    }
+
+    /**
+     * Check if current query using archive connection
+     */
+    private function onArchive(): bool
+    {
+        return $this->getModel()->getConnectionName() === $this->getModel()->getArchiveConnection();
     }
 
     /**
@@ -132,6 +131,7 @@ class Builder extends EloquentBuilder
      */
     public function fallbackToArchive(): self
     {
+        $this->useArchive = true;
         $this->fallbackToArchive = true;
 
         return $this;
@@ -144,62 +144,54 @@ class Builder extends EloquentBuilder
      */
     public function onlyArchived(): self
     {
-        if (! $this->prevConnection) {
-            $this->isOriginalSwitching = true;
-        }
-        $this->putConnection($this, $this->getModel()->getArchiveConnection());
-        $this->setOnArchive(true);
+        $this->useArchive = true;
+        /**
+         * @var string
+         */
+        $connection = $this->getModel()->getArchiveConnection();
+        $this->putConnection($this, $connection);
+        $this->isOriginalSwitching = true;
 
         return $this;
     }
 
     /**
-     * Set  the relationship recovery strategy
+     * Set the relationship recovery strategy
      *
      * @return Builder<TModel>
      */
     public function fallbackRelation(): self
     {
+        $this->useArchive = true;
         $this->fallbackRelation = true;
 
         return $this;
     }
 
-    /**
-     * Set if pending connection is archive connection
-     *
-     * @return Builder<TModel>
-     */
-    public function setOnArchive(bool $on): self
+    private function fallbackToOnlyArchive(): self
     {
-        $this->onArchive = $on;
+        $this->useArchive = true;
+        /**
+         * @var string
+         */
+        $connection = $this->getModel()->getArchiveConnection();
+        $this->putConnection($this, $connection);
 
         return $this;
     }
 
     /**
-     * Save previous connection
-     *
-     * @return Builder<TModel>
+     * Exit from the archive connection database and return to the main database
      */
-    public function setPrevConnection(string $conn): self
+    private function fallbackToMainConnection(EloquentBuilder $builder): static
     {
-        $this->prevConnection = $conn;
-
-        return $this;
-    }
-
-    /**
-     * Exit from the archive connection database and return to the previous database
-     *
-     * @return Builder<TModel>
-     */
-    private function backToPreviousConnection(EloquentBuilder $builder): self
-    {
-        $this->putConnection(builder: $builder);
-
+        /**
+         * @var string
+         */
+        $connection = $this->getModel()->getMainConnection();
+        $this->putConnection($builder, $connection);
         if ($builder instanceof self) {
-            $builder->setOnArchive(false);
+            $builder->useArchive = true;
         }
 
         return $this;
@@ -208,29 +200,8 @@ class Builder extends EloquentBuilder
     /**
      * Set a connection on a given Eloquent builder
      */
-    private function putConnection(self|EloquentBuilder $builder, ?string $c = null): EloquentBuilder
+    private function putConnection(self|EloquentBuilder $builder, string $c): EloquentBuilder
     {
-        if (! $this->prevConnection) {
-            /**
-             * @var ReadArchiveModel
-             */
-            $model = $this->getModel();
-            /**
-             * @var string
-             */
-            $connection = $model->getConnection()->getName();
-            $this->setPrevConnection($connection);
-        }
-        if ($builder instanceof self) {
-            /**
-             * @var string
-             */
-            $connection = $this->prevConnection;
-            $builder->setPrevConnection($connection);
-        }
-        if (! $c) {
-            $c = $this->prevConnection;
-        }
         // Set the connection on the underlying model instance so that generated
         // Relationships/pivots use the same connection
         $builder->getModel()->setConnection($c);
