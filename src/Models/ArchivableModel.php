@@ -11,6 +11,7 @@ use Lab2view\ModelArchive\Traits\Archivable;
  * class ArchiveModel
  *
  * @extends ReadArchiveModel<TModel>
+ *
  * @use Archivable<TModel>
  */
 class ArchivableModel extends ReadArchiveModel

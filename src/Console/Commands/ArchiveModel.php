@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Eloquent\Builder;
-use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Models\ArchivableModel;
+use Lab2view\ModelArchive\Models\Archive;
 use Lab2view\ModelArchive\Models\ReadArchiveModel;
 use Lab2view\ModelArchive\Traits\Archivable;
 use Lab2view\ModelArchive\Traits\ReadArchive;
@@ -100,9 +100,10 @@ class ArchiveModel extends Command
     /**
      * Copy a model to the archive database
      *
+     * @param  ReadArchiveModel  $model
      * @param  array<string>  $archiveWith
      */
-    private function archive(ReadArchiveModel $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
+    private function archive(Model $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
     {
         $modelName = get_class($model);
         $original = $model->getRawOriginal();
@@ -147,7 +148,7 @@ class ArchiveModel extends Command
                 if (class_exists($class)) {
                     $reflection = new \ReflectionClass($class);
                     $valid = ! $reflection->isAbstract() &&
-                            $reflection->isSubclassOf(Model::class) &&  
+                            $reflection->isSubclassOf(Model::class) &&
                             (in_array(Archivable::class, class_uses_recursive($class)));
                 }
 
