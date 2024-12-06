@@ -2,6 +2,7 @@
 
 namespace Lab2view\ModelArchive\Traits;
 
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 use Lab2view\ModelArchive\Eloquent\Builder as ArchiveBuilder;
@@ -29,6 +30,11 @@ trait ReadArchive
         return Config::get('model-archive.archive_db_connection');
     }
 
+    public function getMainConnection(): ?string
+    {
+        return Config::get('model-archive.main_db_connection');
+    }
+
     /**
      * Boot the ReadArchive trait for a model.
      */
@@ -44,6 +50,47 @@ trait ReadArchive
                 )
             );
         }
+    }
+
+    /**
+     * Begin querying a model with eager loading.
+     *
+     * @param  array<mixed>|string  $relations
+     */
+    public static function with($relations, ?bool $fallback = false): EloquentBuilder
+    {
+        $query = static::query()->with(
+            is_string($relations) ? func_get_args() : $relations
+        );
+
+        if ($fallback) {
+            $query->fallbackRelation();
+        }
+
+        return $query;
+    }
+
+    /**
+     * Eager load relations on the model.
+     *
+     * @param  array<mixed>|string  $relations
+     * @return $this
+     */
+    public function load($relations, ?bool $fallback = false)
+    {
+        $query = $this->newQueryWithoutRelationships();
+
+        if ($fallback) {
+            $query->fallbackRelation();
+        }
+
+        $query->with(
+            is_string($relations) ? func_get_args() : $relations
+        );
+
+        $query->eagerLoadRelations([$this]);
+
+        return $this;
     }
 
     /**
