@@ -8,11 +8,5 @@ parameters:
 
     level: 8
 
-    checkGenericClassInNonGenericObjectType: false
-#    ignoreErrors:
-#        - '#PHPDoc tag @var#'
-#
-#    excludePaths:
-#        - ./*/*/FileToBeExcluded.php
-#
-#    checkMissingIterableValueType: false
+    ignoreErrors:
+        - identifier: missingType.generics
