@@ -83,18 +83,17 @@ class Builder extends EloquentBuilder
             'page' => $page,
             'total' => $total,
         ]);
-        $paginator = $this->paginate($perPage, $columns, $pageName, $page, $total);
-        
+        $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
             if (
                 $this->fallbackToArchive ||
                 (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
                 $this->fallbackToOnlyArchive();
-                $paginator = $this->paginate($perPage, $columns, $pageName, $page, $total);
+                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
             } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
                 $this->fallbackToMainConnection($this);
-                $paginator = $this->paginate($perPage, $columns, $pageName, $page, $total);
+                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
             }
         }
 
@@ -115,6 +114,7 @@ class Builder extends EloquentBuilder
     private function paginateParent($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
 
         $total = value($total) ?? $this->toBase()->getCountForPagination();
 
