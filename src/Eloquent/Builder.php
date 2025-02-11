@@ -82,27 +82,7 @@ class Builder extends EloquentBuilder
             'page' => $page,
             'total' => $total,
         ]);
-        $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
-        if ($paginator->isEmpty() && $this->useArchive) {
-            Log::info('paginate on new connection', [
-                'fallbackToArchive' => $this->fallbackToArchive,
-                'isOriginalSwitching' => $this->isOriginalSwitching,
-                'fallbackRelation' => $this->fallbackRelation,
-                'onArchive' => $this->onArchive(),
-            ]);
-            if (
-                $this->fallbackToArchive ||
-                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
-            ) {
-                $this->fallbackToOnlyArchive();
-                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
-            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
-                $this->fallbackToMainConnection($this);
-                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
-            }
-        }
-
-        return $paginator;
+        return parent::paginate($perPage, $columns, $pageName, $page, $total);
     }
 
     public function exists(): bool
