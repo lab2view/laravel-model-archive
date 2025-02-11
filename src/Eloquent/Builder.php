@@ -2,11 +2,11 @@
 
 namespace Lab2view\ModelArchive\Eloquent;
 
-use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Lab2view\ModelArchive\Models\ReadArchiveModel;
 
@@ -75,8 +75,21 @@ class Builder extends EloquentBuilder
      */
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
     {
+        Log::debug('paginate', [
+            'perPage' => $perPage,
+            'columns' => $columns,
+            'pageName' => $pageName,
+            'page' => $page,
+            'total' => $total,
+        ]);
         $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
+            Log::info('paginate on new connection', [
+                'fallbackToArchive' => $this->fallbackToArchive,
+                'isOriginalSwitching' => $this->isOriginalSwitching,
+                'fallbackRelation' => $this->fallbackRelation,
+                'onArchive' => $this->onArchive(),
+            ]);
             if (
                 $this->fallbackToArchive ||
                 (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
