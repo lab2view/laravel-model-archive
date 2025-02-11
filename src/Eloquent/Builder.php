@@ -84,9 +84,7 @@ class Builder extends EloquentBuilder
             'total' => $total,
         ]);
         $paginator = $this->paginate($perPage, $columns, $pageName, $page, $total);
-        Log::debug('object', [
-            'instance' => $this
-        ]);
+        
         if ($paginator->isEmpty() && $this->useArchive) {
             if (
                 $this->fallbackToArchive ||
