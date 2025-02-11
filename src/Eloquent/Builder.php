@@ -118,7 +118,7 @@ class Builder extends EloquentBuilder
         Log::debug('object', [
             'instance' => $this
         ]);
-        $total = value($total) ?? $this->clone()->toBase()->getCountForPagination();
+        $total = value($total) ?? $this->toBase()->getCountForPagination();
         Log::debug('object after base', [
             'instance' => $this
         ]);
