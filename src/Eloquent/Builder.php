@@ -58,6 +58,34 @@ class Builder extends EloquentBuilder
         return $collection;
     }
 
+    /**
+     * Get the count of the total records for the paginator.
+     *
+     * @param array<string> $columns
+     * @return int
+     */
+    public function getCountForPagination($columns = ['*']): int
+    {
+        /** @var int $results */
+        $results = parent::getCountForPagination($columns);
+        if ($results <= 0 && $this->useArchive) {
+            if (
+                $this->fallbackToArchive ||
+                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
+            ) {
+                $this->fallbackToOnlyArchive();
+                /** @var int $results */
+                $results = parent::getCountForPagination($columns);
+            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
+                $this->fallbackToMainConnection($this);
+                /** @var int $results */
+                $results = parent::getCountForPagination($columns);
+            }
+        }
+
+        return $results;
+    }
+
     public function exists(): bool
     {
         $exists = parent::exists();

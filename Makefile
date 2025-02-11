@@ -6,7 +6,7 @@ help: ## Show this help
 
 .PHONY: analyse
 analyse: ## Run static code analysis
-	./vendor/bin/phpstan analyse
+	./vendor/bin/phpstan analyse --memory-limit=-1
 
 .PHONY: format
 format: ## Format the code using standard Laravel conventions
