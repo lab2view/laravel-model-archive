@@ -83,17 +83,17 @@ class Builder extends EloquentBuilder
             'page' => $page,
             'total' => $total,
         ]);
-        $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+        $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
             if (
                 $this->fallbackToArchive ||
                 (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
                 $this->fallbackToOnlyArchive();
-                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
             } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
                 $this->fallbackToMainConnection($this);
-                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
             }
         }
 
