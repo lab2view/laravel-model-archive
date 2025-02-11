@@ -115,7 +115,7 @@ class Builder extends EloquentBuilder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        $total = value($total) ?? $this->toBase()->getCountForPagination();
+        $total = value($total) ?? $this->getQuery()->getCountForPagination();
 
         $perPage = ($perPage instanceof Closure
             ? $perPage($total)
