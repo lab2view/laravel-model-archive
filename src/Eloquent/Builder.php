@@ -83,7 +83,7 @@ class Builder extends EloquentBuilder
             'page' => $page,
             'total' => $total,
         ]);
-        $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+        $paginator = parent::clone()->paginate($perPage, $columns, $pageName, $page, $total);
         Log::debug('object', [
             'instance' => parent::clone()
         ]);
@@ -93,10 +93,10 @@ class Builder extends EloquentBuilder
                 (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
                 $this->fallbackToOnlyArchive();
-                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+                $paginator = parent::clone()->paginate($perPage, $columns, $pageName, $page, $total);
             } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
                 $this->fallbackToMainConnection($this);
-                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+                $paginator = parent::clone()->paginate($perPage, $columns, $pageName, $page, $total);
             }
         }
 
