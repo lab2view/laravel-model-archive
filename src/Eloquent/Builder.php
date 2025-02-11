@@ -84,6 +84,9 @@ class Builder extends EloquentBuilder
             'total' => $total,
         ]);
         $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+        Log::debug('object', [
+            'instance' => parent::clone()
+        ]);
         if ($paginator->isEmpty() && $this->useArchive) {
             if (
                 $this->fallbackToArchive ||
@@ -115,13 +118,8 @@ class Builder extends EloquentBuilder
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
-        Log::debug('object', [
-            'instance' => $this
-        ]);
         $total = value($total) ?? $this->toBase()->getCountForPagination();
-        Log::debug('object after base', [
-            'instance' => $this
-        ]);
+
         $perPage = ($perPage instanceof Closure
             ? $perPage($total)
             : $perPage
