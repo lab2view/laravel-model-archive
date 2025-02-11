@@ -2,9 +2,12 @@
 
 namespace Lab2view\ModelArchive\Eloquent;
 
+use Closure;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use InvalidArgumentException;
 use Lab2view\ModelArchive\Models\ReadArchiveModel;
 
 /**
@@ -59,31 +62,34 @@ class Builder extends EloquentBuilder
     }
 
     /**
-     * Get the count of the total records for the paginator.
+     * Paginate the given query.
      *
-     * @param array<string> $columns
-     * @return int
+     * @param  int|null  $perPage
+     * @param  array<int, string>  $columns
+     * @param  string  $pageName
+     * @param  int|null  $page
+     * @param  int|null  $total
+     * @return LengthAwarePaginator
+     *
+     * @throws InvalidArgumentException
      */
-    public function getCountForPagination($columns = ['*']): int
+    public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
     {
-        /** @var int $results */
-        $results = parent::getCountForPagination($columns);
-        if ($results <= 0 && $this->useArchive) {
+        $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+        if ($paginator->isEmpty() && $this->useArchive) {
             if (
                 $this->fallbackToArchive ||
                 (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
                 $this->fallbackToOnlyArchive();
-                /** @var int $results */
-                $results = parent::getCountForPagination($columns);
+                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
             } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
                 $this->fallbackToMainConnection($this);
-                /** @var int $results */
-                $results = parent::getCountForPagination($columns);
+                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
             }
         }
 
-        return $results;
+        return $paginator;
     }
 
     public function exists(): bool
