@@ -86,7 +86,7 @@ class Builder extends EloquentBuilder
      */
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
     {
-        $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+        $paginator = $this->clone()->paginateParent($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
             if ($this->mustFullbackToOnlyArchive()) {
 
@@ -95,7 +95,7 @@ class Builder extends EloquentBuilder
             } elseif ($this->mustFackToMainConnection()) {
 
                 $this->fallbackToMainConnection($this);
-                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+                $paginator = $this->clone()->paginateParent($perPage, $columns, $pageName, $page, $total);
             }
         }
 
