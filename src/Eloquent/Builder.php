@@ -2,9 +2,14 @@
 
 namespace Lab2view\ModelArchive\Eloquent;
 
+use Closure;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Lab2view\ModelArchive\Models\ReadArchiveModel;
 
 /**
@@ -56,6 +61,73 @@ class Builder extends EloquentBuilder
         }
 
         return $collection;
+    }
+
+    /**
+     * Paginate the given query.
+     *
+     * @param  int|null|Closure  $perPage
+     * @param  array<int, string>  $columns
+     * @param  string  $pageName
+     * @param  int|null  $page
+     * @param  int|null|Closure  $total
+     *
+     * @return LengthAwarePaginator
+     *
+     * @throws InvalidArgumentException
+     */
+    public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
+    {
+        $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+        if ($paginator->isEmpty() && $this->useArchive) {
+            if (
+                $this->fallbackToArchive ||
+                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
+            ) {
+                $this->fallbackToOnlyArchive();
+                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
+                $this->fallbackToMainConnection($this);
+                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+            }
+        }
+
+        return $paginator;
+    }
+
+    /**
+     * Paginate the given query.
+     *
+     * @param  int|null|Closure  $perPage
+     * @param  array<int, string>  $columns
+     * @param  string  $pageName
+     * @param  int|null  $page
+     * @param  int|null|Closure  $total
+     *
+     * @return LengthAwarePaginator
+     *
+     * @throws InvalidArgumentException
+     */
+    private function paginateParent($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
+    {
+        $page = $page ?: Paginator::resolveCurrentPage($pageName);
+
+        /** @var int $total */
+        $total = value($total) ?? $this->toBase()->getCountForPagination();
+
+        $perPage = ($perPage instanceof Closure
+            ? $perPage($total)
+            : $perPage
+        ) ?: $this->model->getPerPage();
+
+        $results = $total
+            ? $this->forPage($page, $perPage)->get($columns)
+            : $this->model->newCollection();
+
+        return $this->paginator($results, $total, $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+            'pageName' => $pageName,
+        ]);
     }
 
     public function exists(): bool
