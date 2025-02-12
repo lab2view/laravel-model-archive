@@ -20,12 +20,17 @@ class ValidateArchiveModel extends Command
         $bar = $this->output->createProgressBar($unvalidatedCommitsQuery->clone()->count());
         $bar->start();
         foreach ($unvalidatedCommitsQuery->cursor() as $commit) {
+            $with = array_filter(
+                $commit->archive_with,
+                fn ($w) => method_exists($commit->archivable_type, $w)
+            );
+
             /**
              * @var ArchivableModel | null
              */
-            $source = $commit->archivable_type::withoutGlobalScopes(class_uses($commit->archivable_type))
+            $source = $commit->archivable_type::withoutGlobalScopes()
                 ->where('id', $commit->archivable_id)
-                ->with($commit->archive_with ?? [])
+                ->with($with)
                 ->select('*')
                 ->first();
 
