@@ -18,7 +18,7 @@ use Lab2view\ModelArchive\Models\ReadArchiveModel;
  *
  * @extends EloquentBuilder<TModel>
  */
-class Builder extends BuilderContract
+class Builder extends EloquentBuilder
 {
     /**
      * Determine if any of the methods to use archives (fallbackToArchive, onlyArchive, fallbackRelation) were called
@@ -66,34 +66,29 @@ class Builder extends BuilderContract
     /**
      * Paginate the given query.
      *
-     * @param  int|null  $perPage
+     * @param  int|null|Closure  $perPage
      * @param  array<int, string>  $columns
      * @param  string  $pageName
      * @param  int|null  $page
-     * @param  int|null  $total
+     * @param  int|null|Closure  $total
+     *
+     * @return LengthAwarePaginator
      *
      * @throws InvalidArgumentException
      */
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
     {
-        Log::debug('paginate', [
-            'perPage' => $perPage,
-            'columns' => $columns,
-            'pageName' => $pageName,
-            'page' => $page,
-            'total' => $total,
-        ]);
-        $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+        $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
             if (
                 $this->fallbackToArchive ||
                 (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
                 $this->fallbackToOnlyArchive();
-                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
             } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
                 $this->fallbackToMainConnection($this);
-                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
+                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
             }
         }
 
@@ -103,11 +98,13 @@ class Builder extends BuilderContract
     /**
      * Paginate the given query.
      *
-     * @param  int|null  $perPage
+     * @param  int|null|Closure  $perPage
      * @param  array<int, string>  $columns
      * @param  string  $pageName
      * @param  int|null  $page
-     * @param  int|null  $total
+     * @param  int|null|Closure  $total
+     *
+     * @return LengthAwarePaginator
      *
      * @throws InvalidArgumentException
      */
@@ -115,6 +112,7 @@ class Builder extends BuilderContract
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
 
+        /** @var int $total */
         $total = value($total) ?? $this->toBase()->getCountForPagination();
 
         $perPage = ($perPage instanceof Closure
