@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Lab2view\ModelArchive\Models\ReadArchiveModel;
 
@@ -40,6 +39,17 @@ class Builder extends EloquentBuilder
      */
     private bool $isOriginalSwitching = false;
 
+    private function mustFullbackToOnlyArchive(): bool
+    {
+        return $this->fallbackToArchive ||
+            (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive());
+    }
+
+    private function mustFackToMainConnection(): bool
+    {
+        return ! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive();
+    }
+
     /**
      * @param  mixed  $columns
      * @return array<TModel>|Collection<TModel>
@@ -48,13 +58,12 @@ class Builder extends EloquentBuilder
     {
         $collection = parent::get($columns);
         if ($collection->isEmpty() && $this->useArchive) {
-            if (
-                $this->fallbackToArchive ||
-                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
-            ) {
+            if ($this->mustFullbackToOnlyArchive()) {
+
                 $this->fallbackToOnlyArchive();
                 $collection = parent::get($columns);
-            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
+            } elseif ($this->mustFackToMainConnection()) {
+
                 $this->fallbackToMainConnection($this);
                 $collection = parent::get($columns);
             }
@@ -71,8 +80,7 @@ class Builder extends EloquentBuilder
      * @param  string  $pageName
      * @param  int|null  $page
      * @param  int|null|Closure  $total
-     *
-     * @return LengthAwarePaginator
+     * @return LengthAwarePaginator<TModel>
      *
      * @throws InvalidArgumentException
      */
@@ -80,13 +88,12 @@ class Builder extends EloquentBuilder
     {
         $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
-            if (
-                $this->fallbackToArchive ||
-                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
-            ) {
+            if ($this->mustFullbackToOnlyArchive()) {
+
                 $this->fallbackToOnlyArchive();
                 $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
-            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
+            } elseif ($this->mustFackToMainConnection()) {
+
                 $this->fallbackToMainConnection($this);
                 $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
             }
@@ -103,8 +110,6 @@ class Builder extends EloquentBuilder
      * @param  string  $pageName
      * @param  int|null  $page
      * @param  int|null|Closure  $total
-     *
-     * @return LengthAwarePaginator
      *
      * @throws InvalidArgumentException
      */
@@ -134,13 +139,12 @@ class Builder extends EloquentBuilder
     {
         $exists = parent::exists();
         if (! $exists && $this->useArchive) {
-            if (
-                $this->fallbackToArchive ||
-                (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
-            ) {
+            if ($this->mustFullbackToOnlyArchive()) {
+
                 $this->fallbackToOnlyArchive();
                 $exists = parent::exists();
-            } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
+            } elseif ($this->mustFackToMainConnection()) {
+
                 $this->fallbackToMainConnection($this);
                 $exists = parent::exists();
             }
