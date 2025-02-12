@@ -23,23 +23,7 @@ class BuilderContract extends Builder
      */
     public function paginate($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null)
     {
-        $page = $page ?: Paginator::resolveCurrentPage($pageName);
-
-        $total = value($total) ?? $this->toBase()->getCountForPagination();
-
-        $perPage = ($perPage instanceof Closure
-            ? $perPage($total)
-            : $perPage
-        ) ?: $this->model->getPerPage();
-
-        $results = $total
-            ? $this->forPage($page, $perPage)->get($columns)
-            : $this->model->newCollection();
-
-        return $this->paginator($results, $total, $perPage, $page, [
-            'path' => Paginator::resolveCurrentPath(),
-            'pageName' => $pageName,
-        ]);
+        return parent::paginate($perPage, $columns, $pageName, $page, $total);
     }
 
 }
