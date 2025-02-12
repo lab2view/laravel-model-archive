@@ -44,12 +44,10 @@ trait Archivable
      */
     public function validateArchive(Archive $commit): bool
     {
-        $archiveWith = $commit->archive_with;
-        /**
-         * @var array<int, string> $selfWith
-         */
-        $selfWith = $this->with;
-        $withOnSelf = array_filter($archiveWith, fn ($w) => in_array($w, $selfWith));
+        $archiveWithOnSelf = array_filter(
+            $commit->archive_with,
+            fn ($w) => method_exists($this, $w)
+        );
 
         /**
          * @var self | null $selfArchiveClone
@@ -59,11 +57,11 @@ trait Archivable
             ->withoutGlobalScopes()
             ->where($this->getUniqBy())
             ->onlyArchived()
-            ->with($withOnSelf)
+            ->with($archiveWithOnSelf)
             ->first();
 
         if ($selfArchiveClone) {
-            foreach ($archiveWith as $relation) {
+            foreach ($archiveWithOnSelf as $relation) {
                 if ($this->$relation !== null && $selfArchiveClone->$relation == null) {
                     return false;
                 }

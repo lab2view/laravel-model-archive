@@ -44,7 +44,7 @@ class ArchiveModel extends Command
             /**
              * @var Builder<ReadArchiveModel>
              */
-            $archivablesQuery = $archivable::withoutGlobalScopes(class_uses_recursive($archivable))
+            $archivablesQuery = $archivable::withoutGlobalScopes()
                 ->archivable()
                 ->select('*')
                 ->with($archiveWith);
@@ -64,7 +64,7 @@ class ArchiveModel extends Command
                             $this->comment(
                                 <<<EOF
                                     >> The relation $archivable->$relation is not instanceof BelongTo or HasOne. 
-                                    There are not archived. 
+                                    It will not be archived. 
                                     Make sure to archive it manually if necessary.
                                 EOF
                             );
@@ -120,7 +120,7 @@ class ArchiveModel extends Command
         if ($commit) {
             $id = $original['id'];
             $data = ['archivable_id' => $id, 'archivable_type' => $modelName, 'archive_with' => $archiveWith];
-            if (! Archive::where(['archivable_id' => $id, 'archivable_type' => $modelName])->exists()) {
+            if (Archive::where(['archivable_id' => $id, 'archivable_type' => $modelName])->doesntExist()) {
                 Archive::create($data);
             }
         }
