@@ -18,7 +18,7 @@ use Lab2view\ModelArchive\Models\ReadArchiveModel;
  *
  * @extends EloquentBuilder<TModel>
  */
-class Builder extends EloquentBuilder
+class Builder extends BuilderContract
 {
     /**
      * Determine if any of the methods to use archives (fallbackToArchive, onlyArchive, fallbackRelation) were called
@@ -83,17 +83,17 @@ class Builder extends EloquentBuilder
             'page' => $page,
             'total' => $total,
         ]);
-        $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+        $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
             if (
                 $this->fallbackToArchive ||
                 (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive())
             ) {
                 $this->fallbackToOnlyArchive();
-                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
             } elseif (! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive()) {
                 $this->fallbackToMainConnection($this);
-                $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
+                $paginator = parent::paginate($perPage, $columns, $pageName, $page, $total);
             }
         }
 
@@ -114,7 +114,6 @@ class Builder extends EloquentBuilder
     private function paginateParent($perPage = null, $columns = ['*'], $pageName = 'page', $page = null, $total = null): LengthAwarePaginator
     {
         $page = $page ?: Paginator::resolveCurrentPage($pageName);
-
 
         $total = value($total) ?? $this->toBase()->getCountForPagination();
 
