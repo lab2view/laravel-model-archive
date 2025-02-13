@@ -8,15 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
-use Lab2view\ModelArchive\Traits\Archivable;
 
 /**
  * Class Archive
  *
  * @property int $archivable_id
- * @property class-string<Archivable> $archivable_type
+ * @property class-string<ArchivableModel> $archivable_type
  * @property array<string> $archive_with
  * @property Carbon $validated_at
+ *
+ * @method Builder<Archive> unvalidated()
  */
 class Archive extends Model
 {
@@ -58,8 +59,8 @@ class Archive extends Model
     /**
      * Scope request to retrieve archives that have not yet been validated
      *
-     * @param  Builder<Model>  $query
-     * @return Builder<Model>
+     * @param  Builder<Archive>  $query
+     * @return Builder<Archive>
      */
     public function scopeUnvalidated(Builder $query): Builder
     {

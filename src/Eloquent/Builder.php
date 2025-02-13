@@ -39,13 +39,13 @@ class Builder extends EloquentBuilder
      */
     private bool $isOriginalSwitching = false;
 
-    private function mustFullbackToOnlyArchive(): bool
+    private function mustFallbackToOnlyArchive(): bool
     {
         return $this->fallbackToArchive ||
             (! $this->isOriginalSwitching && $this->fallbackRelation && ! $this->onArchive());
     }
 
-    private function mustFackToMainConnection(): bool
+    private function mustFallbackToMainConnection(): bool
     {
         return ! $this->isOriginalSwitching && $this->fallbackRelation && $this->onArchive();
     }
@@ -58,11 +58,11 @@ class Builder extends EloquentBuilder
     {
         $collection = parent::get($columns);
         if ($collection->isEmpty() && $this->useArchive) {
-            if ($this->mustFullbackToOnlyArchive()) {
+            if ($this->mustFallbackToOnlyArchive()) {
 
                 $this->fallbackToOnlyArchive();
                 $collection = parent::get($columns);
-            } elseif ($this->mustFackToMainConnection()) {
+            } elseif ($this->mustFallbackToMainConnection()) {
 
                 $this->fallbackToMainConnection($this);
                 $collection = parent::get($columns);
@@ -88,11 +88,11 @@ class Builder extends EloquentBuilder
     {
         $paginator = $this->clone()->paginateParent($perPage, $columns, $pageName, $page, $total);
         if ($paginator->isEmpty() && $this->useArchive) {
-            if ($this->mustFullbackToOnlyArchive()) {
+            if ($this->mustFallbackToOnlyArchive()) {
 
                 $this->fallbackToOnlyArchive();
                 $paginator = $this->paginateParent($perPage, $columns, $pageName, $page, $total);
-            } elseif ($this->mustFackToMainConnection()) {
+            } elseif ($this->mustFallbackToMainConnection()) {
 
                 $this->fallbackToMainConnection($this);
                 $paginator = $this->clone()->paginateParent($perPage, $columns, $pageName, $page, $total);
@@ -139,11 +139,11 @@ class Builder extends EloquentBuilder
     {
         $exists = parent::exists();
         if (! $exists && $this->useArchive) {
-            if ($this->mustFullbackToOnlyArchive()) {
+            if ($this->mustFallbackToOnlyArchive()) {
 
                 $this->fallbackToOnlyArchive();
                 $exists = parent::exists();
-            } elseif ($this->mustFackToMainConnection()) {
+            } elseif ($this->mustFallbackToMainConnection()) {
 
                 $this->fallbackToMainConnection($this);
                 $exists = parent::exists();
