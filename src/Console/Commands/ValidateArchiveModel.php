@@ -10,7 +10,10 @@ class ValidateArchiveModel extends Command
 {
     protected $signature = 'lab2view:validate-archive-model';
 
-    public $description = 'Check if the archiving was done correctly (if the archived data, still present in the main database exists in the archive database, as well as its archived relations with ) and if so, delete this data from the main database.';
+    public $description = 'Check if the archiving was done correctly '
+        .'(if the archived data, still present in the main database exists '
+        .'in the archive database, as well as its archived relations) '
+        .'and if so, delete this data from the main database.';
 
     public function handle(): int
     {
@@ -34,12 +37,13 @@ class ValidateArchiveModel extends Command
     {
         // Check if the archive model class still exists. If it doesn't exist anymore, ignore.
         if (! class_exists($commit->archivable_type)) {
-            $this->error('>> The model '.$commit->archivable_type.' does not exist.');
+            $this->error('>> The model '.$commit->archivable_type.' no longer exists.');
 
             return;
         }
 
         $archiveConnection = (new $commit->archivable_type)->getArchiveConnection();
+
         DB::beginTransaction();
         DB::connection($archiveConnection)->beginTransaction();
 

@@ -156,8 +156,8 @@ class Builder extends EloquentBuilder
     public function getRelation($name): Relation
     {
         $relation = parent::getRelation($name);
-        // When a connection change has been made to the archive.
-        // Whether we are still there or not (fallbackRelation strategy).
+        // When a connection change has been made to the archive,
+        // Whether we are still there or not (fallbackRelation strategy);
         if ($this->useArchive) {
             // If the relationship does not use this eloquent builder, go back to the previous connection and stay there permanently.
             if (! $relation->getQuery() instanceof self) {
@@ -232,7 +232,8 @@ class Builder extends EloquentBuilder
     }
 
     /**
-     * Set the relationship recovery strategy
+     * Set the relationship retrieval strategy to be searched in the analogous database if the relationship is not found in the database the item was retrieved from.
+     * Relations in the $archiveWith property of the model will be retrieved by default from the archive database and otherwise from the main database.
      *
      * @return Builder<TModel>
      */
