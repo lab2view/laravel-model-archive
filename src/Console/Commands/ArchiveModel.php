@@ -26,7 +26,7 @@ class ArchiveModel extends Command
     {
         $archivables = $this->getArchivables();
         if ($archivables->isEmpty()) {
-            $this->error('>> There are no achivable model.');
+            $this->error('>> There are no archivable models.');
 
             return self::FAILURE;
         }
@@ -41,11 +41,16 @@ class ArchiveModel extends Command
              */
             $archiveConnection = $instance->getArchiveConnection();
 
-            /**
-             * @var Builder<ReadArchiveModel>
-             */
-            $archivablesQuery = $archivable::withoutGlobalScopes()
-                ->archivable()
+            /** @var Builder<ArchivableModel> $query */
+            $query = $archivable::withoutGlobalScopes();
+            /** @var Builder<ArchivableModel> $archivablesQuery */
+            $archivablesQuery = $query->clone()->archivable();
+            if ($query->toSql() === $archivablesQuery->clone()->toSql()) {
+                $this->error('<< The scopeArchivable method is not implemented to select data to archive on the model '.$archivable);
+
+                return self::FAILURE;
+            }
+            $archivablesQuery = $archivablesQuery
                 ->select('*')
                 ->with($archiveWith);
 
