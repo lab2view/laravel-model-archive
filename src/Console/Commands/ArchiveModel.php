@@ -106,22 +106,22 @@ class ArchiveModel extends Command
     private function archive(Model $model, array $archiveWith, string $archiveConnection, bool $commit = true): void
     {
         $modelName = get_class($model);
-        $original = $model->getRawOriginal();
+        $dbRawData = $model->getRawOriginal();
         $uniqueBy = $model->getUniqBy();
 
         DB::connection($archiveConnection)
             ->table($model->getTable())
             ->upsert(
-                $original,
+                $dbRawData,
                 $uniqueBy,
-                $original
+                $dbRawData
             );
 
         if ($commit) {
-            $id = $original['id'];
-            $data = ['archivable_id' => $id, 'archivable_type' => $modelName, 'archive_with' => $archiveWith];
+            $id = $dbRawData['id'];
+            $commitData = ['archivable_id' => $id, 'archivable_type' => $modelName, 'archive_with' => $archiveWith];
             if (Archive::where(['archivable_id' => $id, 'archivable_type' => $modelName])->doesntExist()) {
-                Archive::create($data);
+                Archive::create($commitData);
             }
         }
     }
