@@ -19,6 +19,9 @@ class ValidateArchiveModel extends Command
 
         $bar = $this->output->createProgressBar($unvalidatedCommitsQuery->clone()->count());
         $bar->start();
+        /**
+         * @var Archive $commit
+         */
         foreach ($unvalidatedCommitsQuery->cursor() as $commit) {
             $with = array_filter(
                 $commit->archive_with,

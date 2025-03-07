@@ -8,13 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
-use Lab2view\ModelArchive\Traits\Archivable;
 
 /**
  * Class Archive
  *
  * @property int $archivable_id
- * @property class-string<Archivable> $archivable_type
+ * @property class-string<ArchivableModel> $archivable_type
  * @property array<string> $archive_with
  * @property Carbon $validated_at
  */
@@ -23,7 +22,7 @@ class Archive extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'archivable_id',
