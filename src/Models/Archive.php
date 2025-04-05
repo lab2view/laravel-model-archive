@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Config;
  * @property class-string<ArchivableModel> $archivable_type
  * @property array<string> $archive_with
  * @property Carbon $validated_at
+ *
+ * @method Builder<Archive> unvalidated()
  */
 class Archive extends Model
 {
@@ -57,8 +59,8 @@ class Archive extends Model
     /**
      * Scope request to retrieve archives that have not yet been validated
      *
-     * @param  Builder<Model>  $query
-     * @return Builder<Model>
+     * @param  Builder<Archive>  $query
+     * @return Builder<Archive>
      */
     public function scopeUnvalidated(Builder $query): Builder
     {
