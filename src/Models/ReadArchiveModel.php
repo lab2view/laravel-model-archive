@@ -12,7 +12,7 @@ use Lab2view\ModelArchive\Traits\ReadArchive;
  *
  * @use ReadArchive<Model>
  */
-class ReadArchiveModel extends Model
+abstract class ReadArchiveModel extends Model
 {
     use ReadArchive;
 }
