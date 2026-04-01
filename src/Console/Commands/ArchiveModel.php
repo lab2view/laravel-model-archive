@@ -57,6 +57,9 @@ class ArchiveModel extends Command
             $bar = $this->output->createProgressBar($archivablesQuery->clone()->count());
             $bar->start();
 
+            /**
+             * @var ReadArchiveModel $model
+             */
             foreach ($archivablesQuery->cursor() as $model) {
                 DB::beginTransaction();
                 DB::connection($archiveConnection)->beginTransaction();
