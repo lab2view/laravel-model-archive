@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Config;
  * @property Carbon $validated_at
  *
  * @method Builder<Archive> unvalidated()
+ * @method Builder<Archive> validated()
  */
 class Archive extends Model
 {
@@ -65,5 +66,16 @@ class Archive extends Model
     public function scopeUnvalidated(Builder $query): Builder
     {
         return $query->whereNull('validated_at');
+    }
+
+    /**
+     * Scope request to retrieve archives that have been validated
+     *
+     * @param  Builder<Archive>  $query
+     * @return Builder<Archive>
+     */
+    public function scopeValidated(Builder $query): Builder
+    {
+        return $query->whereNotNull('validated_at');
     }
 }
