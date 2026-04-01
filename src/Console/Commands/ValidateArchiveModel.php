@@ -3,6 +3,7 @@
 namespace Lab2view\ModelArchive\Console\Commands;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Config;
 use Lab2view\ModelArchive\Console\Commands\Base\Command;
 use Lab2view\ModelArchive\Models\Archive;
 
@@ -28,6 +29,9 @@ class ValidateArchiveModel extends Command
         foreach ($unvalidatedCommitsQuery->cursor() as $commit) {
             $this->validate($commit);
             $bar->advance();
+        }
+        if (Config::get('model-archive.purge_validated_archives', false)) {
+            Archive::validated()->delete();
         }
 
         $bar->finish();
