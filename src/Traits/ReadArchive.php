@@ -16,7 +16,6 @@ use Lab2view\ModelArchive\Scopes\ReadArchiveScope;
  *
  * class ReadArchive
  *
- * @property ?int $readArchiveWhenDaysBefore
  * @property ?array<string, string> $uniqueBy
  * @property ?array<int, string> $archiveWith
  */
@@ -45,8 +44,7 @@ trait ReadArchive
         if ($instance->getArchiveConnection()) {
             static::addGlobalScope(
                 new ReadArchiveScope(
-                    $instance->getArchiveConnection(),
-                    $instance->readArchiveWhenDaysBefore ?? null
+                    $instance->getArchiveConnection()
                 )
             );
         }
