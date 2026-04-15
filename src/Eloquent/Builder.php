@@ -264,7 +264,7 @@ class Builder extends EloquentBuilder
     private function fallbackToMainConnection(EloquentBuilder $builder): static
     {
         /**
-         * @var string
+         * @var string $connection
          */
         $connection = $this->getModel()->getMainConnection();
         $this->putConnection($builder, $connection);
