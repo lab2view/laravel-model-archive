@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Lab2view\ModelArchive\Models\ReadArchiveModel;
 
@@ -263,7 +264,7 @@ class Builder extends EloquentBuilder
     private function fallbackToMainConnection(EloquentBuilder $builder): static
     {
         /**
-         * @var string
+         * @var string $connection
          */
         $connection = $this->getModel()->getMainConnection();
         $this->putConnection($builder, $connection);
@@ -293,5 +294,25 @@ class Builder extends EloquentBuilder
         $builder->setQuery($query);
 
         return $builder;
+    }
+
+    public function onlyArchiveValidated(): self
+    {
+        $this->onlyArchived();
+
+        $model = $this->getModel();
+        $table = $model->getTable();
+        $keyName = $model->getKeyName();
+        $mainConnection = $model->getMainConnection();
+
+        $archiveIds = DB::connection($mainConnection)
+            ->table('archives')
+            ->select('archivable_id')
+            ->where('archivable_type', $model::class)
+            ->whereNull('validated_at');
+
+        $this->whereNotIn("{$table}.{$keyName}", $archiveIds);
+
+        return $this;
     }
 }
